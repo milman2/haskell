@@ -1,19 +1,23 @@
 # haskell
 Haskell for DSL
 
-## GHC (Glasgow Haskell Compiler)
-
-## STack
+## Install
+### GHC (Glasgow Haskell Compiler)
+```shell
+curl -sSL https://get.haskellstack.org/ | sh
+export PATH="$HOME/.local/bin:$HOME/.stack/bin:$PATH"
 ```
+### STack
+```shell
 choco install haskell-stack
 ```
 
-## Haskell Language Server (HLS) for VS Code
+### Haskell Language Server (HLS) for VS Code
 ```
 stack install haskell-language-server
 ```
 
-## VS Code Extensions
+### VS Code Extensions
 - Haskell
 - Haskell Syntax Highlighting
 - Haskell GHCi Debug Adapter (optional)
