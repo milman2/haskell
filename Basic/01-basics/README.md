@@ -78,12 +78,89 @@ isEven n = n `mod` 2 == 0
 
 ## 테스트 방법
 ```bash
+cd /home/milman2/haskell/Basic/01-basics/basics-project/
 # GHCi에서 테스트
-ghci
-:load Main.hs
+ghci # stack ghci
+:load app/Main.hs
 add 5 3
 multiply 2.5 4.0
 ```
 
 ## 다음 단계
 2단계에서는 리스트와 패턴 매칭에 대해 학습합니다.
+
+# Curring
+- Int -> Int -> Int는 Int -> (Int -> Int)와 같음
+# 타입(Types)
+- :: (type signiture)
+# 다형 타입(Polymorphic types)
+- type variable : 소문자
+# 사용자 정의 타입(User-defined types)
+- data
+- 재귀 타입 (ex. Tre. List)
+# 고차원 함수(Higher-order functions)
+- 함수를 결과로 리턴
+- 한수를 인자로 주기
+```
+add :: Integer -> Integer -> Integer
+add x y = x + y
+
+map :: (a -> b) -> [a] -> [b]
+map f [] = []
+map f (x : xs) = f x : map f xs
+```
+# 지연 계산법(Lazy evaluation)
+- 무한 자료 구조(infinite data structure)
+- 필요할 때만 계산
+```
+ones = 1 : ones
+numFrom n = n : numFrom (n+1)
+squares = map (\x -> x^2) (numFrom 0)
+fib = 1 : 1 : [a + b | (a,b) <- zip fib (tail fib)]
+```
+
+# 람다 계산법(Lambda calculus) - Alonzo Church
+- 튜링 완정성 (Turing-completeness) : 컴퓨터가 하는 모든 일을 할 수 있음(논리 연산, 산술 연산, 메모리)
+```shell
+# 구문(Syntax)
+## 변수 - Variable
+x 
+## 추상화 - Abstraction, (이름이 없는) 함수 정의
+λx. M 
+## 적용 - Application, 함수 호출
+M N
+
+# 의미(Semantics)
+(λx. M) N => M [x:=N]
+
+(λx. x+1) 123 => (x+1) [x:=123] = (123 + 1) = 124
+```
+
+## 논리곱
+```shell
+tru = λt. λf. t # True
+fls = λt. λf. f # False
+and = λb. λc. b c fls
+and tru tru = ((λb. λc. b c fls) tru) tru
+    => (λc. b c fls) [b:=tru] tru = (λc. tru c fls) tru
+    => (λn. tru c fls) [c:=tru] = (tru tru fls) = (λt. λf. t) tru fls
+    => ((λf. t)[t:=tru]) fls = (λf. tru) fls
+    => ((tru)[f:=fls]) = tru
+```
+
+## 숫자와 산술 연산 - Church numerals and arithmetic operations
+```shell
+c0 = λs. λz. z
+c1 = λs. λz. s z
+c2 = λs. λz. s (s z)
+c3 = λs. λz. s (s (s z))
+
+plus = λm. λn. λs. λz. m s (n s z)
+c3 = plus c1 c2
+```
+
+# 타입 시스템 (Type system)
+- Monad type
+- Gradual types
+- Session typed calculus
+- The Polymorphic RPC calculus
