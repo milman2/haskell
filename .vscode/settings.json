@@ -1,0 +1,10 @@
+{
+    "haskell.serverExecutablePath": "haskell-language-server-9.10.2",
+    "haskell.formattingProvider": "ormolu",
+    "haskell.hlint.enable": true,
+    "haskell.manageHLS": "GHCup",
+    "haskell.trace.server": "messages",
+    "haskell.serverArgs": ["--lsp"],
+    "haskell.maxCompletions": 40,
+    "haskell.completionSnippetsOn": true
+}
