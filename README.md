@@ -2,18 +2,11 @@
 Haskell for DSL
 
 ## Install
-### GHC (Glasgow Haskell Compiler)
+### GHC (Glasgow Haskell Compiler), Stack and Haskell Language Server
 ```shell
+# choco install haskell-stack
 curl -sSL https://get.haskellstack.org/ | sh
 export PATH="$HOME/.local/bin:$HOME/.stack/bin:$PATH"
-```
-### STack
-```shell
-choco install haskell-stack
-```
-
-### Haskell Language Server (HLS) for VS Code
-```
 stack install haskell-language-server
 ```
 
