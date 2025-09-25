@@ -6,5 +6,6 @@
     "haskell.trace.server": "messages",
     "haskell.serverArgs": ["--lsp"],
     "haskell.maxCompletions": 40,
-    "haskell.completionSnippetsOn": true
+    "haskell.completionSnippetsOn": true,
+    "haskell.ghcide.enable": false
 }

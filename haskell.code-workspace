@@ -1,0 +1,23 @@
+{
+    "folders": [
+        {
+            "name": "Haskell Projects",
+            "path": "."
+        },
+        {
+            "name": "Enum Generator",
+            "path": "./DSL/enum-generator"
+        }
+    ],
+    "settings": {
+        "haskell.serverExecutablePath": "haskell-language-server-wrapper",
+        "haskell.formattingProvider": "ormolu",
+        "haskell.hlint.enable": true,
+        "haskell.manageHLS": "GHCup",
+        "haskell.trace.server": "messages",
+        "haskell.serverArgs": ["--lsp"],
+        "haskell.maxCompletions": 40,
+        "haskell.completionSnippetsOn": true,
+        "haskell.ghcide.enable": false
+    }
+}
