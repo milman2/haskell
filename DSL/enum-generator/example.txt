@@ -1,0 +1,30 @@
+enum Color : uint8 {
+    RED,
+    GREEN,
+    BLUE,
+}
+
+enum WeekOfDay : uint8 {
+    MONDAY = 0,
+    TUESDAY,
+    WEDNESDAY,
+    THURSDAY,
+    FRIDAY,
+    SATURDAY,
+    SUNDAY,
+}
+
+enum Status : int32 {
+    PENDING = 0,
+    RUNNING = 1,
+    COMPLETED = 2,
+    FAILED = 3,
+    CANCELLED = 4,
+}
+
+enum Priority : uint8 {
+    LOW = 1,
+    MEDIUM = 2,
+    HIGH = 3,
+    CRITICAL = 4,
+}

@@ -147,6 +147,11 @@ and tru tru = ((λb. λc. b c fls) tru) tru
     => ((λf. t)[t:=tru]) fls = (λf. tru) fls
     => ((tru)[f:=fls]) = tru
 ```
+## 람다(Lambda) - Anonymous function
+```shell
+ghci> (\x -> length x > 1) "abc"
+ghci> filter (\x -> length x > 1) ["abc", "d", "ef"]
+```
 
 ## 숫자와 산술 연산 - Church numerals and arithmetic operations
 ```shell
@@ -157,6 +162,11 @@ c3 = λs. λz. s (s (s z))
 
 plus = λm. λn. λs. λz. m s (n s z)
 c3 = plus c1 c2
+```
+# Partial application
+```shell
+ghci> (*3) 4
+ghci> (3*) 4
 ```
 
 # 타입 시스템 (Type system)

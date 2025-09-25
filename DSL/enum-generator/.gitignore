@@ -1,0 +1,6 @@
+.stack-work/
+*~
+
+output/
+example.hpp
+example.cs
