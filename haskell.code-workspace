@@ -19,5 +19,14 @@
         "haskell.maxCompletions": 40,
         "haskell.completionSnippetsOn": true,
         "haskell.ghcide.enable": false
+    },
+    "extensions": {
+        "recommendations": [
+            "haskell.haskell",
+            "justusadam.language-haskell",
+            "vigoo.stylish-haskell",
+            "alanz.vscode-hie-server",
+            "ms-vscode.vscode-json"
+        ]
     }
 }
