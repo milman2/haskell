@@ -222,11 +222,22 @@ generateCppCode file =
         namespace = case filePackage file of
             Just pkg -> ["namespace " ++ unpack pkg ++ " {", ""]
             Nothing -> []
-        definitions = concatMap generateCppDefinitionCode (fileDefinitions file)
+        -- 타입 선언 순서: enum 먼저, 그 다음 message, 마지막에 service
+        enums = concatMap generateCppDefinitionCode (filter isEnum (fileDefinitions file))
+        messages = concatMap generateCppDefinitionCode (filter isMessage (fileDefinitions file))
+        services = concatMap generateCppDefinitionCode (filter isService (fileDefinitions file))
+        definitions = enums ++ messages ++ services
         namespaceEnd = case filePackage file of
             Just _ -> ["", "} // namespace"]
             Nothing -> []
     in unlines $ includes ++ namespace ++ definitions ++ namespaceEnd
+  where
+    isEnum (FileEnum _) = True
+    isEnum _ = False
+    isMessage (FileMessage _) = True
+    isMessage _ = False
+    isService (FileService _) = True
+    isService _ = False
 
 -- C++ 헤더 포함
 generateCppIncludes :: [String]
@@ -252,7 +263,10 @@ generateCppMessageCode msg =
         fields = messageFields msg
         nestedTypes = messageNestedTypes msg
         fieldStrings = map generateCppFieldCode fields
-        nestedTypeCodes = concatMap generateCppNestedTypeCode nestedTypes
+        -- 중첩된 타입들을 올바른 순서로 생성: enum 먼저, 그 다음 message
+        nestedEnums = concatMap generateCppNestedTypeCode (filter isNestedEnum nestedTypes)
+        nestedMessages = concatMap generateCppNestedTypeCode (filter isNestedMessage nestedTypes)
+        nestedTypeCodes = nestedEnums ++ nestedMessages
         getterFunctions = generateCppGetterFunctions typeName fields
         setterFunctions = generateCppSetterFunctions typeName fields
     in nestedTypeCodes ++
@@ -264,6 +278,11 @@ generateCppMessageCode msg =
         ["private:"] ++
         fieldStrings ++
         ["};", ""]
+  where
+    isNestedEnum (NestedEnum _) = True
+    isNestedEnum _ = False
+    isNestedMessage (NestedMessage _) = True
+    isNestedMessage _ = False
 
 -- C++ 중첩된 타입 코드 생성
 generateCppNestedTypeCode :: NestedType -> [String]
