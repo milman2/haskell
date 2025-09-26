@@ -21,6 +21,13 @@ message Person {
   repeated PhoneNumber phones = 4;
 }
 
+message Empty {
+}
+
+message AddressBook {
+  repeated Person people = 1;
+}
+
 service AddressBookService {
   rpc AddPerson(Person) returns (int32);
   rpc GetPerson(int32) returns (Person);

@@ -85,6 +85,12 @@ capitalize [] = []
 capitalize (x:xs) = toUpper x : xs
   where toUpper c = if c >= 'a' && c <= 'z' then toEnum (fromEnum c - 32) else c
 
+-- 첫 글자 소문자로 변환
+uncapitalize :: String -> String
+uncapitalize [] = []
+uncapitalize (x:xs) = toLower x : xs
+  where toLower c = if c >= 'A' && c <= 'Z' then toEnum (fromEnum c + 32) else c
+
 -- snake_case를 PascalCase로 변환
 toPascalCase :: String -> String
 toPascalCase [] = []
@@ -190,10 +196,10 @@ generateServiceCode service =
 -- 메서드 코드 생성
 generateMethodCode :: Method -> String
 generateMethodCode method = 
-    let methodNameStr = unpack (methodName method)
+    let methodNameStr = uncapitalize (unpack (methodName method))
         inputTypeStr = capitalizeTypeName (unpack (methodInputType method))
         outputTypeStr = capitalizeTypeName (unpack (methodOutputType method))
-    in unwords [methodNameStr, "::", inputTypeStr, "->", "m", outputTypeStr]
+    in unwords [methodNameStr, "::", inputTypeStr, "-> m", outputTypeStr]
 
 -- 타입 이름을 대문자로 변환 (int32 -> Int32)
 capitalizeTypeName :: String -> String
