@@ -5,7 +5,8 @@ module CapnProto.SimpleCodeGen where
 import CapnProto.SimpleTypes
 import Data.Text (Text, pack, unpack)
 import qualified Data.Text as T
-import Data.List (intercalate)
+import Data.List (intercalate, partition, sortBy)
+import Data.Ord (comparing)
 import Data.Char (toUpper, toLower)
 
 -- 코드 생성기 타입
@@ -68,8 +69,9 @@ generateHaskellStructCode struct =
 generateHaskellFieldCode :: Field -> String
 generateHaskellFieldCode field =
     let fieldNameStr = unpack (fieldName field)
+        safeFieldName = generateSafeFieldName "haskell" fieldNameStr
         fieldTypeStr = generateHaskellFieldTypeCode (fieldType field)
-    in unwords [fieldNameStr, "::", fieldTypeStr]
+    in unwords [safeFieldName, "::", fieldTypeStr]
 
 -- Haskell 필드 타입 코드 생성
 generateHaskellFieldTypeCode :: FieldType -> String
@@ -141,8 +143,9 @@ generateCppCode _ capnpFile =
             Just ns -> generateCppNamespace (unpack ns)
             Nothing -> []
         -- 타입 선언 순서: enum 먼저, 그 다음 struct, 마지막에 interface
+        -- struct들도 의존성 순서로 정렬
         enums = concatMap generateCppDefinitionCode (filter isEnum (fileDefinitions capnpFile))
-        structs = concatMap generateCppDefinitionCode (filter isStruct (fileDefinitions capnpFile))
+        structs = concatMap generateCppDefinitionCode (sortStructsByDependency (filter isStruct (fileDefinitions capnpFile)))
         interfaces = concatMap generateCppDefinitionCode (filter isInterface (fileDefinitions capnpFile))
         definitions = enums ++ structs ++ interfaces
         namespaceEnd = case fileNamespace capnpFile of
@@ -156,6 +159,35 @@ generateCppCode _ capnpFile =
     isStruct _ = False
     isInterface (FileInterface _) = True
     isInterface _ = False
+    
+    -- struct들을 의존성 순서로 정렬
+    sortStructsByDependency :: [FileDefinition] -> [FileDefinition]
+    sortStructsByDependency structs = 
+        let structNames = map getStructName structs
+            sortedStructs = sortByDependency structs structNames
+        in sortedStructs
+    
+    getStructName (FileStruct struct) = unpack (structName struct)
+    getStructName _ = ""
+    
+    -- 의존성에 따라 struct 정렬 (간단한 휴리스틱)
+    sortByDependency :: [FileDefinition] -> [String] -> [FileDefinition]
+    sortByDependency structs allNames = 
+        let (noDeps, withDeps) = partition hasNoDependencies structs
+            sortedNoDeps = sortBy (comparing getStructName) noDeps
+            sortedWithDeps = sortBy (comparing getStructName) withDeps
+        in sortedNoDeps ++ sortedWithDeps
+    
+    hasNoDependencies (FileStruct struct) = 
+        let fields = structFields struct
+            fieldTypes = map (getFieldTypeName . fieldType) fields
+            currentStructName = unpack (structName struct)
+        in not (any (`elem` fieldTypes) (filter (/= currentStructName) (map getStructName (filter isStruct (fileDefinitions capnpFile)))))
+    hasNoDependencies _ = True
+    
+    getFieldTypeName (UserDefinedType name) = unpack name
+    getFieldTypeName (ListType (UserDefinedType name)) = unpack name
+    getFieldTypeName _ = ""
 
 -- C++ 인클루드 생성
 generateCppIncludes :: [String]
@@ -192,8 +224,9 @@ generateCppStructCode struct =
 generateCppFieldCode :: Field -> String
 generateCppFieldCode field =
     let fieldNameStr = unpack (fieldName field)
+        safeFieldName = generateSafeFieldName "cpp" fieldNameStr
         fieldTypeStr = generateCppFieldTypeCode (fieldType field)
-    in unwords [fieldTypeStr, fieldNameStr, ";"]
+    in unwords [fieldTypeStr, safeFieldName, ";"]
 
 -- C++ 필드 타입 코드 생성
 generateCppFieldTypeCode :: FieldType -> String
@@ -312,9 +345,11 @@ generateCSharpStructCode struct =
 -- C# 필드 코드 생성
 generateCSharpFieldCode :: Field -> String
 generateCSharpFieldCode field =
-    let fieldNameStr = toPascalCase (unpack (fieldName field))
+    let fieldNameStr = unpack (fieldName field)
+        safeFieldName = generateSafeFieldName "csharp" fieldNameStr
+        pascalFieldName = toPascalCase safeFieldName
         fieldTypeStr = generateCSharpFieldTypeCode (fieldType field)
-    in unwords ["  public", fieldTypeStr, fieldNameStr, "{ get; set; }"]
+    in unwords ["  public", fieldTypeStr, pascalFieldName, "{ get; set; }"]
 
 -- C# 필드 타입 코드 생성
 generateCSharpFieldTypeCode :: FieldType -> String
@@ -424,8 +459,9 @@ generatePythonStructCode struct =
 generatePythonFieldCode :: Field -> String
 generatePythonFieldCode field =
     let fieldNameStr = unpack (fieldName field)
+        safeFieldName = generateSafeFieldName "python" fieldNameStr
         fieldTypeStr = generatePythonFieldTypeCode (fieldType field)
-    in unwords [fieldNameStr, ":", fieldTypeStr]
+    in unwords [safeFieldName, ":", fieldTypeStr]
 
 -- Python 필드 타입 코드 생성
 generatePythonFieldTypeCode :: FieldType -> String
@@ -507,7 +543,7 @@ csharpReservedWords :: [String]
 csharpReservedWords = ["class", "struct", "enum", "interface", "namespace", "public", "private", "protected", "internal", "virtual", "static", "const", "readonly", "volatile", "mutable", "explicit", "implicit", "inline", "sealed", "abstract", "override", "new", "virtual", "operator", "event", "delegate", "using", "if", "else", "for", "while", "do", "switch", "case", "default", "break", "continue", "return", "goto", "try", "catch", "throw", "finally", "lock", "checked", "unchecked", "unsafe", "fixed", "stackalloc", "sizeof", "typeof", "is", "as", "this", "base", "null", "true", "false", "void", "bool", "byte", "sbyte", "char", "decimal", "double", "float", "int", "uint", "long", "ulong", "object", "short", "ushort", "string", "var", "dynamic", "ref", "out", "params", "in", "where", "select", "from", "group", "orderby", "join", "let", "into", "on", "equals", "by", "ascending", "descending"]
 
 pythonReservedWords :: [String]
-pythonReservedWords = ["and", "as", "assert", "break", "class", "continue", "def", "del", "elif", "else", "except", "exec", "finally", "for", "from", "global", "if", "import", "in", "is", "lambda", "not", "or", "pass", "print", "raise", "return", "try", "while", "with", "yield", "True", "False", "None"]
+pythonReservedWords = ["and", "as", "assert", "break", "class", "continue", "def", "del", "elif", "else", "except", "exec", "finally", "for", "from", "global", "if", "import", "in", "is", "lambda", "not", "or", "pass", "print", "raise", "return", "try", "while", "with", "yield", "True", "False", "None", "type"]
 
 isReservedWord :: String -> String -> Bool
 isReservedWord lang word = 

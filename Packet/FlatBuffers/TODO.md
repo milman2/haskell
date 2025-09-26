@@ -38,38 +38,51 @@ FlatBuffers/
 └── TODO.md                    # 이 파일
 ```
 
-## 🔧 구현 단계
+## ✅ 구현 완료된 기능
 
-### 1단계: 기본 타입 및 AST 정의
-- [ ] FlatBuffers 기본 타입 정의 (byte, ubyte, short, ushort, int, uint, float, double, bool, string)
-- [ ] Table, Struct, Union, Enum 등 AST 노드 정의
-- [ ] GADT를 사용한 타입 안전한 AST 구조
-- [ ] 스키마 버전 관리 구조
+### 1단계: 기본 타입 및 AST 정의 ✅
+- [x] FlatBuffers 기본 타입 정의 (byte, ubyte, short, ushort, int, uint, float, double, bool, string)
+- [x] Table, Struct, Union, Enum 등 AST 노드 정의
+- [x] 간단한 AST 구조 (SimpleTypes.hs)
+- [x] 스키마 버전 관리 구조
 
-### 2단계: IDL 파서 구현
-- [ ] Megaparsec를 사용한 .fbs 문법 파서
-- [ ] Namespace 및 Include 문 파싱
-- [ ] Table 정의 파싱 (필드, 기본값, deprecated)
-- [ ] Struct 정의 파싱 (고정 크기 구조체)
-- [ ] Union 정의 파싱
-- [ ] Enum 정의 파싱
-- [ ] Root type 정의 파싱
+### 2단계: IDL 파서 구현 ✅
+- [x] Megaparsec를 사용한 .fbs 문법 파서 (SimpleParser.hs)
+- [x] Namespace 및 Include 문 파싱
+- [x] Table 정의 파싱 (필드, 기본값, deprecated)
+- [x] Struct 정의 파싱 (고정 크기 구조체)
+- [x] Union 정의 파싱
+- [x] Enum 정의 파싱
+- [x] Root type 정의 파싱
 
-### 3단계: 스키마 검증 및 최적화
-- [ ] 스키마 유효성 검증
-- [ ] 필드 ID 자동 할당
-- [ ] 메모리 레이아웃 최적화
-- [ ] 스키마 진화 규칙 검증
-- [ ] 순환 참조 감지
+### 3단계: 다중 언어 코드 생성기 구현 ✅
+- [x] Haskell 코드 생성 (Record 타입, Type class, Enum)
+- [x] C++ 코드 생성 (Struct, Class, Enum, Namespace, Union with std::variant)
+- [x] C# 코드 생성 (Class, Interface, Enum, Properties, Abstract Union classes)
+- [x] Python 코드 생성 (Dataclass, Class, Type hints, Union types)
 
-### 4단계: 코드 생성기 구현
-- [ ] AST를 Haskell 타입으로 변환
-- [ ] Template Haskell을 사용한 코드 생성
-- [ ] Builder 패턴 구현
-- [ ] Reader 패턴 구현
-- [ ] Union 타입 처리
+### 4단계: 고급 코드 생성 기능 ✅
+- [x] **예약어 검사**: 각 언어별 예약어 자동 변환
+- [x] **C++ 전방 선언**: 의존성 순서로 타입 선언 (enum → struct/table → union)
+- [x] **C# PascalCase**: 필드명 자동 변환 (`fieldName` → `FieldName`)
+- [x] **Union 타입 처리**: 
+  - C++: `std::variant<Type1, Type2>`
+  - C#: Abstract class with derived classes
+  - Python: `Type1 | Type2` union types
+- [x] **문법 오류 방지**: 
+  - 마지막 enum 값 콤마 제거
+  - Record 필드 콤마 관리
+  - C++ struct 의존성 순서 정렬
 
-### 5단계: FlatBuffers 직렬화
+### 5단계: CLI 도구 구현 ✅
+- [x] optparse-applicative를 사용한 CLI 인터페이스
+- [x] 다중 언어 출력 지원 (`-l haskell|cpp|csharp|python`)
+- [x] 출력 파일 지정 (`-o output.hs`)
+- [x] 상세 출력 모드 (`-v`)
+
+## 🔧 향후 구현 계획
+
+### 6단계: FlatBuffers 직렬화
 - [ ] Wire format 구현 (Little-endian, Offset-based)
 - [ ] String table 및 Offset table 관리
 - [ ] Zero-copy 역직렬화

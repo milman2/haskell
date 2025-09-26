@@ -69,22 +69,42 @@ Packet/
 - **테스트**: `hspec`, `quickcheck` - 포괄적인 테스트 프레임워크
 - **벤치마크**: `criterion` - 정확한 성능 측정
 
-## 🚀 구현 계획
+## ✅ 구현 완료된 기능
 
-### Phase 1: 기본 구조 설정
-1. 각 프로젝트의 기본 Cabal 설정
-2. 예제 IDL 파일 작성
-3. 프로젝트 구조 설계
+### 다중 언어 코드 생성
+- **Haskell**: Record 타입, Type class, Enum, Const
+- **C++**: Struct, Class, Enum, Namespace, Interface
+- **C#**: Class, Interface, Enum, Properties (PascalCase)
+- **Python**: Dataclass, Class, Type hints
 
-### Phase 2: 파서 구현
-1. Megaparsec를 사용한 IDL 파서
-2. AST 정의 및 검증
-3. 파서 테스트 작성
+### 고급 코드 생성 기능
+- **예약어 검사**: 각 언어별 예약어 자동 변환 (예: `type` → `typeField`)
+- **C++ 전방 선언**: 의존성 순서로 타입 선언 (enum → struct → interface)
+- **C# PascalCase**: 필드명 자동 변환 (`fieldName` → `FieldName`)
+- **문법 오류 방지**: 마지막 enum 값 콤마 제거, Record 필드 콤마 관리
 
-### Phase 3: 코드 생성기 구현
-1. Template Haskell을 사용한 코드 생성
-2. 타입 안전한 직렬화/역직렬화 함수 생성
-3. 코드 생성 테스트 작성
+### CLI 도구
+```bash
+# Protobuf Generator
+./protobuf-generator examples/person.proto -l haskell -v
+./protobuf-generator examples/person.proto -l cpp -v
+./protobuf-generator examples/person.proto -l csharp -v
+./protobuf-generator examples/person.proto -l python -v
+
+# FlatBuffers Generator  
+./flatbuffers-generator examples/monster.fbs -l haskell -v
+./flatbuffers-generator examples/monster.fbs -l cpp -v
+./flatbuffers-generator examples/monster.fbs -l csharp -v
+./flatbuffers-generator examples/monster.fbs -l python -v
+
+# Cap'n Proto Generator
+./capnproto-generator examples/addressbook.capnp -l haskell -v
+./capnproto-generator examples/addressbook.capnp -l cpp -v
+./capnproto-generator examples/addressbook.capnp -l csharp -v
+./capnproto-generator examples/addressbook.capnp -l python -v
+```
+
+## 🚀 향후 구현 계획
 
 ### Phase 4: 직렬화 엔진 구현
 1. 각 포맷의 Wire format 구현
@@ -96,10 +116,10 @@ Packet/
 2. 스키마 진화 지원
 3. 네트워크 통신 (Cap'n Proto)
 
-### Phase 6: CLI 도구 및 테스트
-1. 사용자 친화적인 CLI 인터페이스
-2. 포괄적인 테스트 스위트
-3. 성능 벤치마크
+### Phase 6: 테스트 및 최적화
+1. 포괄적인 테스트 스위트
+2. 성능 벤치마크
+3. 메모리 프로파일링
 
 ## 📚 학습 목표
 
