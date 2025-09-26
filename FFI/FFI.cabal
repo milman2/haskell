@@ -1,0 +1,41 @@
+name:                ffi-examples
+version:             0.1.0.0
+license:             BSD3
+license-file:        LICENSE
+author:              FFI Examples
+maintainer:          examples@haskell.org
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  exposed-modules:     HaskellToCpp, HaskellFunctions
+  build-depends:       base >=4.8 && <5.0
+  other-modules:       
+  other-extensions:    ForeignFunctionInterface
+  build-tools:         gcc
+  extra-libraries:     stdc++
+  c-sources:           cpp_functions.cpp
+  include-dirs:        .
+  includes:            cpp_functions.h
+  ghc-options:         -fPIC -O2
+
+executable haskell-to-cpp
+  main-is:             haskell-to-cpp.hs
+  build-depends:       base >=4.8 && <5.0, ffi-examples
+  other-modules:       HaskellToCpp
+  other-extensions:    ForeignFunctionInterface
+  build-tools:         gcc
+  extra-libraries:     stdc++
+  c-sources:           cpp_functions.cpp
+  include-dirs:        .
+  includes:            cpp_functions.h
+  ghc-options:         -fPIC -O2
+
+executable cpp-calls-haskell
+  main-is:             cpp_calls_haskell.cpp
+  build-depends:       base >=4.8 && <5.0, ffi-examples
+  other-modules:       HaskellFunctions
+  other-extensions:    ForeignFunctionInterface
+  build-tools:         gcc
+  extra-libraries:     stdc++
+  ghc-options:         -fPIC -O2
