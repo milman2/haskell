@@ -37,7 +37,7 @@ data FieldRule
 data FieldType
     = ScalarType ProtobufScalarType
     | UserDefinedType Text
-    | MapType FieldType FieldType
+    | MapType ProtobufScalarType ProtobufScalarType
     deriving (Show, Eq)
 
 -- 필드 정의

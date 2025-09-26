@@ -7,20 +7,53 @@ import Text.Megaparsec (parse)
 import Protobuf.SimpleCodeGen
 import Protobuf.SimpleTypes
 import Data.Text (Text, pack, unpack)
+import Data.Char (toLower)
+import Data.Maybe (isJust)
+import Data.List (intercalate)
+import Control.Monad (when)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import System.Environment (getArgs)
 import System.Exit (exitWith, ExitCode(ExitFailure))
 import System.FilePath (takeFileName, takeDirectory)
 import System.Directory (createDirectoryIfMissing)
-import Options.Applicative (Parser, ParserInfo, argument, option, str, metavar, help, long, short, optional, switch, info, fullDesc, progDesc, header, helper, execParser, (<**>))
+import Options.Applicative (Parser, ParserInfo, argument, option, str, metavar, help, long, short, optional, switch, info, fullDesc, progDesc, header, helper, execParser, (<**>), auto)
 
 -- 1. CLI 옵션 정의
+
+-- 언어 정보를 담는 타입
+data LanguageInfo = LanguageInfo
+    { langName :: String
+    , langExtension :: String
+    , langDisplayName :: String
+    } deriving (Show, Eq)
+
+-- 지원되는 언어들
+supportedLanguages :: [(String, LanguageInfo)]
+supportedLanguages =
+    [ ("haskell", LanguageInfo "haskell" ".hs" "Haskell")
+    , ("cpp", LanguageInfo "cpp" ".hpp" "C++")
+    , ("csharp", LanguageInfo "csharp" ".cs" "C#")
+    , ("python", LanguageInfo "python" ".py" "Python")
+    ]
+
+-- 언어 이름으로 LanguageInfo 찾기
+findLanguageInfo :: String -> Maybe LanguageInfo
+findLanguageInfo name = lookup name supportedLanguages
+
+-- 지원되는 언어 이름 목록
+supportedLanguageNames :: [String]
+supportedLanguageNames = map fst supportedLanguages
+
+-- 언어 이름 검증
+isValidLanguage :: String -> Bool
+isValidLanguage name = isJust (findLanguageInfo name)
 
 data ProtobufOptions = ProtobufOptions
     { inputFile :: FilePath
     , outputFile :: Maybe FilePath
     , outputDir :: Maybe FilePath
+    , language :: String
     , verbose :: Bool
     } deriving (Show)
 
@@ -29,8 +62,9 @@ data ProtobufOptions = ProtobufOptions
 protobufOptions :: Parser ProtobufOptions
 protobufOptions = ProtobufOptions
     <$> argument str (metavar "INPUT" <> help "Input .proto file")
-    <*> optional (option str (long "output" <> short 'o' <> metavar "FILE" <> help "Output Haskell file"))
+    <*> optional (option str (long "output" <> short 'o' <> metavar "FILE" <> help "Output file"))
     <*> optional (option str (long "output-dir" <> short 'd' <> metavar "DIR" <> help "Output directory (default: generated/)"))
+    <*> option str (long "language" <> short 'l' <> metavar "LANG" <> help ("Output language: " ++ intercalate ", " supportedLanguageNames ++ " (default: haskell)"))
     <*> switch (long "verbose" <> short 'v' <> help "Verbose output")
 
 -- CLI 정보
@@ -74,15 +108,22 @@ processProtobufFile options = do
             then putStrLn "Successfully parsed Protocol Buffers file"
             else return ()
             
-            -- Haskell 코드 생성
-            let haskellCode = generateHaskellCode protobufFile
+            -- 언어 검증
+            let langName = map toLower (language options)
+            when (not (isValidLanguage langName)) $ do
+                putStrLn $ "Error: Unsupported language '" ++ langName ++ "'"
+                putStrLn $ "Supported languages: " ++ intercalate ", " supportedLanguageNames
+                exitWith (ExitFailure 1)
+            
+            -- 코드 생성 (언어별)
+            let generatedCode = generateCode langName protobufFile
             
             if verbose options
-            then putStrLn "Generated Haskell code:"
+            then putStrLn "Generated code:"
             else return ()
             
             if verbose options
-            then putStrLn haskellCode
+            then putStrLn generatedCode
             else return ()
             
             -- 출력 파일 결정
@@ -94,13 +135,16 @@ processProtobufFile options = do
                             dir = case outputDir options of
                                 Just d -> d
                                 Nothing -> "generated"
-                        in dir ++ "/" ++ baseName ++ ".hs"
+                            extension = case findLanguageInfo langName of
+                                Just langInfo -> langExtension langInfo
+                                Nothing -> ".hs" -- fallback
+                        in dir ++ "/" ++ baseName ++ extension
             
             -- 출력 디렉토리 생성
             createDirectoryIfMissing True (takeDirectory outputPath)
             
             -- 파일 쓰기
-            writeFile outputPath haskellCode
+            writeFile outputPath generatedCode
             
             if verbose options
             then putStrLn $ "Code written to: " ++ outputPath

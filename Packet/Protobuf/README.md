@@ -1,16 +1,18 @@
 ﻿# Protobuf DSL Packet Generator
 
-Haskell DSL을 사용하여 Protocol Buffers 스타일의 패킷 생성기를 구현한 프로젝트입니다. `.proto` 파일을 파싱하고, 타입 안전한 Haskell 코드를 생성합니다.
+Haskell DSL을 사용하여 Protocol Buffers 스타일의 패킷 생성기를 구현한 프로젝트입니다. `.proto` 파일을 파싱하고, Haskell, C++, C# 등 다중 언어로 타입 안전한 코드를 생성합니다.
 
 ## 📋 프로젝트 개요
 
-이 프로젝트는 Protocol Buffers의 IDL(Interface Definition Language)을 파싱하고, Haskell의 강력한 타입 시스템을 활용하여 타입 안전한 직렬화/역직렬화 코드를 자동 생성하는 DSL을 구현합니다.
+이 프로젝트는 Protocol Buffers의 IDL(Interface Definition Language)을 파싱하고, Haskell의 강력한 타입 시스템을 활용하여 다중 언어(Haskell, C++, C#)로 타입 안전한 코드를 자동 생성하는 DSL을 구현합니다. 사용자는 `.proto` 파일을 입력하면 원하는 언어의 타입 정의와 인터페이스를 생성할 수 있습니다.
 
 ## 🎯 주요 기능
 
 - **`.proto` 파일 파싱**: Megaparsec를 사용한 강력한 파서
-- **타입 안전한 코드 생성**: Template Haskell을 사용한 메타프로그래밍
+- **다중 언어 코드 생성**: Haskell, C++, C# 지원
+- **타입 안전한 코드 생성**: 각 언어의 관례에 맞는 타입 생성
 - **CLI 도구**: 사용자 친화적인 명령줄 인터페이스
+- **유연한 출력 옵션**: 출력 디렉토리 및 파일명 지정
 - **검증 시스템**: 파싱된 구조의 유효성 검사
 - **확장 가능한 구조**: 새로운 타입과 기능 추가 용이
 
@@ -85,10 +87,14 @@ parseMessage = do
 
 ### 3. 코드 생성기 (`SimpleCodeGen.hs`)
 
+- **다중 언어 지원**: Haskell, C++, C# 코드 생성
 - **Haskell 타입 생성**: 메시지를 Haskell 데이터 타입으로 변환
-- **열거형 생성**: Protobuf enum을 Haskell enum으로 변환
-- **서비스 생성**: RPC 서비스를 Haskell 타입 클래스로 변환
-- **타입 매핑**: Protobuf 타입을 적절한 Haskell 타입으로 매핑
+- **C++ 헤더 생성**: C++ struct, enum class, 클래스 생성
+- **C# 클래스 생성**: C# class, enum, interface 생성
+- **열거형 생성**: Protobuf enum을 각 언어의 enum으로 변환
+- **서비스 생성**: RPC 서비스를 각 언어의 인터페이스로 변환
+- **타입 매핑**: Protobuf 타입을 각 언어의 적절한 타입으로 매핑
+- **네임스페이스 지원**: package 선언을 각 언어의 네임스페이스로 변환
 
 ```haskell
 -- 생성되는 Haskell 코드 예시
@@ -99,10 +105,32 @@ data Person = Person
     } deriving (Show, Eq, Generic)
 ```
 
+```cpp
+// 생성되는 C++ 코드 예시
+struct Person {
+  std::string name;
+  int32_t age;
+  std::string email;
+};
+```
+
+```csharp
+// 생성되는 C# 코드 예시
+public class Person
+{
+  public string name { get; set; }
+  public int age { get; set; }
+  public string email { get; set; }
+}
+```
+
 ### 4. CLI 도구 (`SimpleMain.hs`)
 
 - **optparse-applicative**: 사용자 친화적인 CLI 인터페이스
-- **파일 I/O**: .proto 파일 읽기 및 .hs 파일 생성
+- **다중 언어 지원**: Haskell, C++, C# 출력 언어 선택
+- **유연한 출력 옵션**: 출력 디렉토리 및 파일명 지정
+- **자동 디렉토리 생성**: 출력 디렉토리가 없으면 자동 생성
+- **파일 I/O**: .proto 파일 읽기 및 각 언어별 파일 생성
 - **에러 처리**: 파싱 및 파일 처리 에러 관리
 - **상세 옵션**: verbose 모드, 출력 파일 지정
 
@@ -118,11 +146,19 @@ cabal build
 ### 실행
 
 ```bash
-# 기본 사용
+# 기본 사용 (Haskell 코드 생성)
 ./protobuf-generator person.proto
+
+# 언어 지정
+./protobuf-generator person.proto -l haskell    # Haskell (.hs)
+./protobuf-generator person.proto -l cpp        # C++ (.hpp)
+./protobuf-generator person.proto -l csharp     # C# (.cs)
 
 # 출력 파일 지정
 ./protobuf-generator person.proto -o Person.hs
+
+# 출력 디렉토리 지정
+./protobuf-generator person.proto -d output
 
 # 상세 출력
 ./protobuf-generator person.proto -v
@@ -131,8 +167,14 @@ cabal build
 ### 예제
 
 ```bash
-# person.proto 파일로 Haskell 코드 생성
-./protobuf-generator examples/person.proto -v
+# Haskell 코드 생성
+./protobuf-generator examples/person.proto -l haskell -v
+
+# C++ 헤더 파일 생성
+./protobuf-generator examples/person.proto -l cpp -d cpp_output -v
+
+# C# 클래스 파일 생성
+./protobuf-generator examples/person.proto -l csharp -d csharp_output -v
 ```
 
 ## 📝 예제 .proto 파일
@@ -168,7 +210,9 @@ service AddressBookService {
 }
 ```
 
-## 🔍 생성되는 Haskell 코드
+## 🔍 생성되는 코드 예시
+
+### Haskell 코드
 
 ```haskell
 import Data.Text (Text)
@@ -177,24 +221,102 @@ import Data.Int (Int32, Int64)
 import Data.Word (Word32, Word64)
 import GHC.Generics (Generic)
 
-data Person = Person {
-  name :: Text,
-  id :: Int32,
-  email :: Text,
-  phones :: [PhoneNumber]
+data PhoneNumber = PhoneNumber {
+  number :: Text ,
+  type :: PhoneType ,
 } deriving (Show, Eq, Generic)
 
 data PhoneType = MOBILE | HOME | WORK deriving (Show, Eq, Generic)
 
-data PhoneNumber = PhoneNumber {
-  number :: Text,
-  type :: PhoneType
+data Person = Person {
+  name :: Text ,
+  id :: Int32 ,
+  email :: Text ,
+  phones :: [PhoneNumber] ,
 } deriving (Show, Eq, Generic)
 
 class AddressBookService m where
   AddPerson :: Person -> m Int32
   GetPerson :: Int32 -> m Person
   ListPeople :: Empty -> m AddressBook
+```
+
+### C++ 코드
+
+```cpp
+#pragma once
+#include <string>
+#include <vector>
+#include <map>
+#include <cstdint>
+
+namespace tutorial {
+
+struct PhoneNumber {
+  std::string number;
+  PhoneType type;
+};
+
+enum class PhoneType {
+  MOBILE = 0,
+  HOME = 1,
+  WORK = 2,
+};
+
+struct Person {
+  std::string name;
+  int32_t id;
+  std::string email;
+  std::vector<PhoneNumber> phones;
+};
+
+class AddressBookService {
+public:
+  virtual int32_t AddPerson(Person input) = 0;
+  virtual Person GetPerson(int32_t input) = 0;
+  virtual AddressBook ListPeople(Empty input) = 0;
+};
+
+} // namespace
+```
+
+### C# 코드
+
+```csharp
+using System;
+using System.Collections.Generic;
+
+namespace tutorial
+{
+public class PhoneNumber
+{
+  public string number { get; set; }
+  public PhoneType type { get; set; }
+}
+
+public enum PhoneType
+{
+  MOBILE = 0,
+  HOME = 1,
+  WORK = 2,
+}
+
+public class Person
+{
+  public string name { get; set; }
+  public int id { get; set; }
+  public string email { get; set; }
+  public List<PhoneNumber> phones { get; set; }
+}
+
+public interface AddressBookService
+{
+  int AddPerson(Person input);
+  Person GetPerson(int input);
+  AddressBook ListPeople(Empty input);
+}
+
+}
 ```
 
 ## 🧪 테스트
@@ -212,6 +334,8 @@ cabal run protobuf-tests
 - **megaparsec**: 강력한 파서 컴비네이터
 - **text**: 효율적인 텍스트 처리
 - **optparse-applicative**: CLI 인터페이스
+- **filepath**: 파일 경로 처리
+- **directory**: 디렉토리 생성 및 관리
 - **template-haskell**: 메타프로그래밍 (고급 기능)
 - **bytestring**: 바이너리 데이터 처리 (직렬화)
 - **binary**: 바이너리 직렬화 (직렬화)
@@ -221,12 +345,17 @@ cabal run protobuf-tests
 ### ✅ 완성된 기능
 - [x] 기본 타입 시스템
 - [x] 파서 시스템
-- [x] 코드 생성기
-- [x] CLI 도구
+- [x] 다중 언어 코드 생성기 (Haskell, C++, C#)
+- [x] CLI 도구 (언어 선택, 출력 옵션)
+- [x] 파일 생성 위치 지정
+- [x] 자동 디렉토리 생성
+- [x] 네임스페이스/패키지 지원
+- [x] 중첩된 타입 지원
+- [x] 서비스/RPC 인터페이스 생성
 - [x] 예제 파일
+- [x] Git 무시 설정
 
 ### 🔄 개발 중인 기능
-- [ ] 컴파일 오류 수정
 - [ ] 테스트 구현
 - [ ] 고급 타입 시스템 (GADT)
 - [ ] Template Haskell 코드 생성
@@ -235,7 +364,9 @@ cabal run protobuf-tests
 
 ### 📋 향후 계획
 - [ ] 성능 최적화
-- [ ] 더 많은 Protobuf 기능 지원
+- [ ] 더 많은 Protobuf 기능 지원 (oneof, extensions 등)
+- [ ] 추가 언어 지원 (Java, Python, Go 등)
+- [ ] 바이너리 직렬화/역직렬화 구현
 - [ ] 문서화 개선
 - [ ] CI/CD 설정
 
