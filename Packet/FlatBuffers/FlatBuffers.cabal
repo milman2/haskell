@@ -1,0 +1,106 @@
+cabal-version:      3.0
+name:               FlatBuffers
+version:            0.1.0.0
+synopsis:           FlatBuffers DSL Packet Generator
+description:        A Haskell DSL for parsing .fbs files and generating zero-copy serialization code with schema evolution support.
+license:            MIT
+license-file:       LICENSE
+author:             Your Name
+maintainer:         your.email@example.com
+build-type:         Simple
+
+common warnings
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wunused-type-patterns
+    default-language: GHC2021
+
+executable flatbuffers-generator
+    import:           warnings
+    main-is:          Main.hs
+    build-depends:
+        base ^>=4.20.0.0,
+        text,
+        megaparsec,
+        template-haskell,
+        prettyprinter,
+        bytestring,
+        binary,
+        cereal,
+        optparse-applicative,
+        containers,
+        mtl,
+        primitive,
+        vector
+    other-modules:
+        FlatBuffers.Parser,
+        FlatBuffers.AST,
+        FlatBuffers.Schema,
+        FlatBuffers.CodeGen,
+        FlatBuffers.Serialize,
+        FlatBuffers.MemoryLayout,
+        FlatBuffers.Types
+    hs-source-dirs:   src
+
+test-suite flatbuffers-tests
+    import:           warnings
+    type:             exitcode-stdio-1.0
+    main-is:          Test.hs
+    build-depends:
+        base ^>=4.20.0.0,
+        text,
+        megaparsec,
+        template-haskell,
+        prettyprinter,
+        bytestring,
+        binary,
+        cereal,
+        optparse-applicative,
+        containers,
+        mtl,
+        primitive,
+        vector,
+        hspec,
+        quickcheck
+    other-modules:
+        FlatBuffers.Parser,
+        FlatBuffers.AST,
+        FlatBuffers.Schema,
+        FlatBuffers.CodeGen,
+        FlatBuffers.Serialize,
+        FlatBuffers.MemoryLayout,
+        FlatBuffers.Types,
+        ParserTest,
+        SchemaTest,
+        SerializeTest,
+        PerformanceTest
+    hs-source-dirs:   src, tests
+
+benchmark flatbuffers-benchmarks
+    import:           warnings
+    type:             exitcode-stdio-1.0
+    main-is:          Bench.hs
+    build-depends:
+        base ^>=4.20.0.0,
+        text,
+        megaparsec,
+        template-haskell,
+        prettyprinter,
+        bytestring,
+        binary,
+        cereal,
+        optparse-applicative,
+        containers,
+        mtl,
+        primitive,
+        vector,
+        criterion
+    other-modules:
+        FlatBuffers.Parser,
+        FlatBuffers.AST,
+        FlatBuffers.Schema,
+        FlatBuffers.CodeGen,
+        FlatBuffers.Serialize,
+        FlatBuffers.MemoryLayout,
+        FlatBuffers.Types,
+        SerializeBench,
+        MemoryBench
+    hs-source-dirs:   src, benchmarks

@@ -1,0 +1,123 @@
+cabal-version:      3.0
+name:               CapnProto
+version:            0.1.0.0
+synopsis:           Cap'n Proto DSL Packet Generator
+description:        A Haskell DSL for parsing .capnp files and generating infinite-speed serialization code with RPC support.
+license:            MIT
+license-file:       LICENSE
+author:             Your Name
+maintainer:         your.email@example.com
+build-type:         Simple
+
+common warnings
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wunused-type-patterns
+    default-language: GHC2021
+
+executable capnproto-generator
+    import:           warnings
+    main-is:          Main.hs
+    build-depends:
+        base ^>=4.20.0.0,
+        text,
+        megaparsec,
+        template-haskell,
+        prettyprinter,
+        bytestring,
+        binary,
+        cereal,
+        optparse-applicative,
+        containers,
+        mtl,
+        primitive,
+        vector,
+        network,
+        async,
+        stm
+    other-modules:
+        CapnProto.Parser,
+        CapnProto.AST,
+        CapnProto.Schema,
+        CapnProto.CodeGen,
+        CapnProto.Serialize,
+        CapnProto.RPC,
+        CapnProto.MemoryLayout,
+        CapnProto.Network,
+        CapnProto.Types
+    hs-source-dirs:   src
+
+test-suite capnproto-tests
+    import:           warnings
+    type:             exitcode-stdio-1.0
+    main-is:          Test.hs
+    build-depends:
+        base ^>=4.20.0.0,
+        text,
+        megaparsec,
+        template-haskell,
+        prettyprinter,
+        bytestring,
+        binary,
+        cereal,
+        optparse-applicative,
+        containers,
+        mtl,
+        primitive,
+        vector,
+        network,
+        async,
+        stm,
+        hspec,
+        quickcheck
+    other-modules:
+        CapnProto.Parser,
+        CapnProto.AST,
+        CapnProto.Schema,
+        CapnProto.CodeGen,
+        CapnProto.Serialize,
+        CapnProto.RPC,
+        CapnProto.MemoryLayout,
+        CapnProto.Network,
+        CapnProto.Types,
+        ParserTest,
+        SchemaTest,
+        SerializeTest,
+        RPCTest,
+        NetworkTest
+    hs-source-dirs:   src, tests
+
+benchmark capnproto-benchmarks
+    import:           warnings
+    type:             exitcode-stdio-1.0
+    main-is:          Bench.hs
+    build-depends:
+        base ^>=4.20.0.0,
+        text,
+        megaparsec,
+        template-haskell,
+        prettyprinter,
+        bytestring,
+        binary,
+        cereal,
+        optparse-applicative,
+        containers,
+        mtl,
+        primitive,
+        vector,
+        network,
+        async,
+        stm,
+        criterion
+    other-modules:
+        CapnProto.Parser,
+        CapnProto.AST,
+        CapnProto.Schema,
+        CapnProto.CodeGen,
+        CapnProto.Serialize,
+        CapnProto.RPC,
+        CapnProto.MemoryLayout,
+        CapnProto.Network,
+        CapnProto.Types,
+        SerializeBench,
+        RPCBench,
+        NetworkBench
+    hs-source-dirs:   src, benchmarks

@@ -1,0 +1,35 @@
+// Schema evolution example for FlatBuffers
+
+namespace MyGame.Sample;
+
+// Original schema (v1)
+table PersonV1 {
+  name:string;
+  age:int;
+}
+
+// Evolved schema (v2) - adding new field
+table PersonV2 {
+  name:string;
+  age:int;
+  email:string; // New field added
+}
+
+// Evolved schema (v3) - adding more fields and changing types
+table PersonV3 {
+  name:string;
+  age:int;
+  email:string;
+  phone:string; // Another new field
+  isActive:bool = true; // New field with default value
+}
+
+// Union example for schema evolution
+union PersonData { PersonV1, PersonV2, PersonV3 }
+
+table PersonContainer {
+  data:PersonData;
+  version:int = 3; // Track schema version
+}
+
+root_type PersonContainer;

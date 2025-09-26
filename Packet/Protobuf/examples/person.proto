@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package tutorial;
+
+// Person 메시지 정의
+message Person {
+  string name = 1;
+  int32 id = 2;
+  string email = 3;
+
+  // 중첩된 메시지 타입
+  enum PhoneType {
+    MOBILE = 0;
+    HOME = 1;
+    WORK = 2;
+  }
+
+  message PhoneNumber {
+    string number = 1;
+    PhoneType type = 2;
+  }
+
+  repeated PhoneNumber phones = 4;
+}
+
+// AddressBook 메시지 정의
+message AddressBook {
+  repeated Person people = 1;
+}
+
+// 서비스 정의 (RPC)
+service AddressBookService {
+  rpc AddPerson(Person) returns (int32);
+  rpc GetPerson(int32) returns (Person);
+  rpc ListPeople(Empty) returns (AddressBook);
+}
+
+message Empty {}
