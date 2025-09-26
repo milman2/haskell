@@ -101,6 +101,7 @@ parseColumns tokens = parseColumnList tokens []
 
 parseColumnList :: [String] -> [Text] -> Either Text ([Text], [String])
 parseColumnList [] acc = Right (reverse acc, [])
+parseColumnList ("FROM" : rest) acc = Right (reverse acc, "FROM" : rest)
 parseColumnList ("," : rest) acc = parseColumnList rest acc
 parseColumnList (col : rest) acc = parseColumnList rest (pack col : acc)
 
@@ -325,6 +326,27 @@ testQueryPDSL = do
     -- 복잡한 WHERE 절 테스트
     putStrLn "Example 3: SELECT * FROM users WHERE age > 25 AND name = \"Jane\""
     case parseQuery "SELECT * FROM users WHERE age > 25 AND name = \"Jane\"" of
+        Left err -> putStrLn $ "Parse error: " ++ unpack err
+        Right query -> case executeQuery env query of
+            Left err -> putStrLn $ "Execution error: " ++ unpack err
+            Right rows -> do
+                putStrLn $ "Found " ++ show (length rows) ++ " rows"
+                mapM_ (putStrLn . show) rows
+    putStrLn ""
+    
+    -- 추가 쿼리 예제들
+    putStrLn "Example 4: SELECT name, age FROM users WHERE age > 25"
+    case parseQuery "SELECT name, age FROM users WHERE age > 25" of
+        Left err -> putStrLn $ "Parse error: " ++ unpack err
+        Right query -> case executeQuery env query of
+            Left err -> putStrLn $ "Execution error: " ++ unpack err
+            Right rows -> do
+                putStrLn $ "Found " ++ show (length rows) ++ " rows"
+                mapM_ (putStrLn . show) rows
+    putStrLn ""
+    
+    putStrLn "Example 5: SELECT * FROM users WHERE age < 30"
+    case parseQuery "SELECT * FROM users WHERE age < 30" of
         Left err -> putStrLn $ "Parse error: " ++ unpack err
         Right query -> case executeQuery env query of
             Left err -> putStrLn $ "Execution error: " ++ unpack err

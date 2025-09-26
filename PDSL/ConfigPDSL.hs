@@ -9,7 +9,7 @@ module ConfigPDSL where
 
 import Data.Map (Map, fromList, lookup, insert)
 import qualified Data.Map as Map
-import Data.Text (Text, pack, unpack, splitOn)
+import Data.Text (Text, pack, unpack)
 import Data.List (intercalate)
 import Control.Monad (when, unless)
 
@@ -54,7 +54,7 @@ parseConfigLines (line : rest) acc = do
             parseConfigLines rest (expr : acc)
 
 parseConfigLine :: String -> Either Text ConfigExpr
-parseConfigLine line = case splitOn '=' line of
+parseConfigLine line = case splitOnChar '=' line of
     [key, value] -> do
         let key' = pack (trim key)
         let value' = trim value
@@ -72,12 +72,12 @@ parseConfigValue value = case value of
         Right (ConfigNumber (read x))
     x | head x == '[' && last x == ']' -> do
         let content = init (tail x)
-        let items = map trim (splitOn ',' content)
+        let items = map trim (splitOnChar ',' content)
         exprs <- mapM parseConfigValue items
         return (ConfigList exprs)
     x | head x == '{' && last x == '}' -> do
         let content = init (tail x)
-        let pairs = map (splitOn ':') (splitOn ',' content)
+        let pairs = map (splitOnChar ':') (splitOnChar ',' content)
         configPairs <- mapM (\(k : v : _) -> do
             let key = pack (trim k)
             expr <- parseConfigValue (trim v)
@@ -191,16 +191,28 @@ testConfigPDSL = do
                             Just (CNumber port) -> putStrLn $ "Port: " ++ show port
                             _ -> putStrLn "Port not found"
                         _ -> putStrLn "Port section not found"
+                    
+                    -- 모든 설정 값 출력
+                    putStrLn "\nAll configuration values:"
+                    mapM_ (\sectionName -> do
+                        putStrLn $ "Section: " ++ unpack sectionName
+                        case Map.lookup sectionName (configSections finalEnv) of
+                            Just section -> mapM_ (\key -> do
+                                case Map.lookup key section of
+                                    Just value -> putStrLn $ "  " ++ unpack key ++ " = " ++ show value
+                                    Nothing -> return ()) (Map.keys section)
+                            Nothing -> return ()
+                        putStrLn "") (Map.keys (configSections finalEnv))
 
 -- 9. 유틸리티 함수들
 trim :: String -> String
 trim = reverse . dropWhile (== ' ') . reverse . dropWhile (== ' ')
 
-splitOn :: Char -> String -> [String]
-splitOn _ [] = []
-splitOn c s = case break (== c) s of
+splitOnChar :: Char -> String -> [String]
+splitOnChar _ [] = []
+splitOnChar c s = case break (== c) s of
     (x, []) -> [x]
-    (x, _ : xs) -> x : splitOn c xs
+    (x, _ : xs) -> x : splitOnChar c xs
 
 isDigit :: Char -> Bool
 isDigit c = c >= '0' && c <= '9'

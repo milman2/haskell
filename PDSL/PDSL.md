@@ -360,6 +360,7 @@ ghc --make Main.hs -o pdslexample
 cd /home/milman2/haskell/PDSL
 
 # 프로젝트 빌드
+# stack init
 stack build
 
 # 실행

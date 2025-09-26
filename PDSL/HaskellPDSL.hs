@@ -17,6 +17,7 @@ import Control.Monad (when)
 data PDSLExpr
     = Number Double
     | String Text
+    | Boolean Bool
     | Variable Text
     | Add PDSLExpr PDSLExpr
     | Subtract PDSLExpr PDSLExpr
@@ -57,10 +58,24 @@ data PDSLFunction = PDSLFunction
 
 -- 3. PDSL 파서 (간단한 파싱 함수들)
 parsePDSL :: Text -> Either Text PDSLExpr
-parsePDSL input = case parseExpr (words (unpack input)) of
+parsePDSL input = case parseExpr (tokenize (unpack input)) of
     Left err -> Left (pack err)
     Right (expr, []) -> Right expr
     Right (_, remaining) -> Left ("Unexpected tokens: " `mappend` pack (unwords remaining))
+
+-- 토큰화 함수 - 연산자와 괄호를 제대로 분리
+tokenize :: String -> [String]
+tokenize [] = []
+tokenize (c:cs)
+    | c `elem` ['(', ')', '!', '='] = [c] : tokenize cs
+    | c == '&' && not (null cs) && head cs == '&' = "&&" : tokenize (tail cs)
+    | c == '|' && not (null cs) && head cs == '|' = "||" : tokenize (tail cs)
+    | c == '=' && not (null cs) && head cs == '=' = "==" : tokenize (tail cs)
+    | c `elem` ['+', '-', '*', '/', '<', '>'] = [c] : tokenize cs
+    | c `elem` [' ', '\t', '\n'] = tokenize cs
+    | otherwise = 
+        let (token, rest) = span (\x -> not (x `elem` ['(', ')', '!', '&', '|', '=', '+', '-', '*', '/', '<', '>', ' ', '\t', '\n'])) (c:cs)
+        in token : tokenize rest
 
 parseExpr :: [String] -> Either String (PDSLExpr, [String])
 parseExpr tokens = parseOr tokens
@@ -149,6 +164,8 @@ parseFactor tokens = case tokens of
             return (Number (read x), rest)
         x | head x == '"' && last x == '"' -> 
             return (String (pack (init (tail x))), rest)
+        "true" -> return (Boolean True, rest)
+        "false" -> return (Boolean False, rest)
         x -> return (Variable (pack x), rest)
 
 isDigit :: Char -> Bool
@@ -158,6 +175,7 @@ isDigit c = c >= '0' && c <= '9'
 evalPDSL :: PDSLEnv -> PDSLExpr -> Either Text PDSLValue
 evalPDSL env (Number n) = Right (VNumber n)
 evalPDSL env (String s) = Right (VString s)
+evalPDSL env (Boolean b) = Right (VBoolean b)
 evalPDSL env (Variable name) = case Map.lookup name (variables env) of
     Just value -> Right value
     Nothing -> Left ("Variable not found: " `mappend` name)
@@ -283,22 +301,46 @@ testPDSL = do
     putStrLn "=== Haskell PDSL Examples ==="
     putStrLn ""
     
+    putStrLn "--- Basic Arithmetic ---"
     putStrLn "Example 1: 2 + 3 * 4"
     runPDSL "2 + 3 * 4"
     putStrLn ""
     
-    putStrLn "Example 2: 10 > 5 && 3 < 7"
+    putStrLn "Example 2: (2 + 3) * (4 - 1)"
+    runPDSL "(2 + 3) * (4 - 1)"
+    putStrLn ""
+    
+    putStrLn "Example 3: 10 / 2 + 3"
+    runPDSL "10 / 2 + 3"
+    putStrLn ""
+    
+    putStrLn "--- Logical Operations ---"
+    putStrLn "Example 4: 10 > 5 && 3 < 7"
     runPDSL "10 > 5 && 3 < 7"
     putStrLn ""
     
-    putStrLn "Example 3: if 5 > 3 then 10 else 20"
-    runPDSL "if 5 > 3 then 10 else 20"
+    putStrLn "Example 5: 5 > 10 || 3 < 7"
+    runPDSL "5 > 10 || 3 < 7"
     putStrLn ""
     
-    putStrLn "Example 4: !(5 > 10)"
+    putStrLn "Example 6: !(5 > 10)"
     runPDSL "!(5 > 10)"
     putStrLn ""
     
-    putStrLn "Example 5: (2 + 3) * (4 - 1)"
-    runPDSL "(2 + 3) * (4 - 1)"
+    putStrLn "--- Conditional Expressions ---"
+    putStrLn "Example 7: if 5 > 3 then 10 else 20"
+    runPDSL "if 5 > 3 then 10 else 20"
+    putStrLn ""
+    
+    putStrLn "Example 8: if false then 1 else 2"
+    runPDSL "if false then 1 else 2"
+    putStrLn ""
+    
+    putStrLn "--- Complex Expressions ---"
+    putStrLn "Example 9: if (2 + 3) > 4 then 10 else 20"
+    runPDSL "if (2 + 3) > 4 then 10 else 20"
+    putStrLn ""
+    
+    putStrLn "Example 10: (5 > 3) && (10 < 15)"
+    runPDSL "(5 > 3) && (10 < 15)"
     putStrLn ""
