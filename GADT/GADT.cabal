@@ -1,0 +1,27 @@
+cabal-version:      3.0
+name:               GADT
+version:            0.1.0.0
+synopsis:           GADT examples and DSL implementations
+description:        Examples demonstrating GADT (Generalized Algebraic Data Types) and their usage in DSLs.
+license:            MIT
+license-file:       LICENSE
+author:             Your Name
+maintainer:         your.email@example.com
+build-type:         Simple
+
+common warnings
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wunused-type-patterns
+    default-language: GHC2021
+
+executable GADT
+    import:           warnings
+    main-is:          Main.hs
+    build-depends:
+        base ^>=4.20.0.0,
+        text,
+        containers
+    other-modules:
+        BasicGADT,
+        DSLGADT,
+        AdvancedGADT,
+        ConfigGADT
