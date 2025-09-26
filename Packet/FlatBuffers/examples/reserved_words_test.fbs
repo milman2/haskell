@@ -1,0 +1,18 @@
+// Test file for reserved words handling
+
+namespace test;
+
+enum Color:byte { Red = 0, Green, Blue }
+
+struct ReservedTest {
+  type:byte;        // Haskell 예약어
+  class:short;      // Haskell, C++, C# 예약어
+  namespace:int;    // C++ 예약어
+  public:bool;      // C++ 예약어
+  private:float;    // C++ 예약어
+  protected:double; // C++ 예약어
+  if:string;        // 모든 언어 예약어
+  for:Color;        // 모든 언어 예약어
+  while:byte;       // 모든 언어 예약어
+  return:short;     // 모든 언어 예약어
+}

@@ -15,29 +15,18 @@ common warnings
 
 executable flatbuffers-generator
     import:           warnings
-    main-is:          Main.hs
+    main-is:          SimpleMain.hs
     build-depends:
         base ^>=4.20.0.0,
         text,
         megaparsec,
-        template-haskell,
-        prettyprinter,
-        bytestring,
-        binary,
-        cereal,
         optparse-applicative,
-        containers,
-        mtl,
-        primitive,
-        vector
+        filepath,
+        directory
     other-modules:
-        FlatBuffers.Parser,
-        FlatBuffers.AST,
-        FlatBuffers.Schema,
-        FlatBuffers.CodeGen,
-        FlatBuffers.Serialize,
-        FlatBuffers.MemoryLayout,
-        FlatBuffers.Types
+        FlatBuffers.SimpleParser,
+        FlatBuffers.SimpleCodeGen,
+        FlatBuffers.SimpleTypes
     hs-source-dirs:   src
 
 test-suite flatbuffers-tests
