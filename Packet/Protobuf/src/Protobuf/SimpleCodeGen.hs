@@ -65,22 +65,74 @@ generateMessageCode msg =
     in nestedTypeCodes ++
        [unwords ["data", typeName, "=", typeName, "{"]] ++
         indentedFields ++
-        ["} deriving (Show, Eq, Generic)"]
+        ["} deriving (Show, Eq, Generic)", ""]
 
 -- 중첩된 타입 코드 생성
 generateNestedTypeCode :: NestedType -> [String]
 generateNestedTypeCode (NestedMessage msg) = generateMessageCode msg
 generateNestedTypeCode (NestedEnum enum) = generateEnumCode enum
 
+
+-- 문자열의 첫 글자를 대문자로 변환
+capitalize :: String -> String
+capitalize [] = []
+capitalize (x:xs) = toUpper x : xs
+  where toUpper c = if c >= 'a' && c <= 'z' then toEnum (fromEnum c - 32) else c
+
+-- snake_case를 PascalCase로 변환
+toPascalCase :: String -> String
+toPascalCase [] = []
+toPascalCase (x:xs) = toUpper x : processRest xs
+  where
+    toUpper c = if c >= 'a' && c <= 'z' then toEnum (fromEnum c - 32) else c
+    processRest [] = []
+    processRest ('_':y:ys) = toUpper y : processRest ys
+    processRest (y:ys) = y : processRest ys
+
+-- Haskell 예약어 목록
+haskellReservedWords :: [String]
+haskellReservedWords = 
+    ["case", "class", "data", "default", "deriving", "do", "else", "if", "import", "in", "infix", "infixl", "infixr", "instance", "let", "module", "newtype", "of", "then", "type", "where", "_", "as", "qualified", "hiding", "foreign", "export", "safe", "unsafe", "ccall", "stdcall", "cplusplus", "jvm", "dotnet", "primitive"]
+
+-- C++ 예약어 목록
+cppReservedWords :: [String]
+cppReservedWords = 
+    ["alignas", "alignof", "and", "and_eq", "asm", "auto", "bitand", "bitor", "bool", "break", "case", "catch", "char", "char16_t", "char32_t", "class", "compl", "const", "constexpr", "const_cast", "continue", "decltype", "default", "delete", "do", "double", "dynamic_cast", "else", "enum", "explicit", "export", "extern", "false", "float", "for", "friend", "goto", "if", "inline", "int", "long", "mutable", "namespace", "new", "noexcept", "not", "not_eq", "nullptr", "operator", "or", "or_eq", "private", "protected", "public", "register", "reinterpret_cast", "return", "short", "signed", "sizeof", "static", "static_assert", "static_cast", "struct", "switch", "template", "this", "thread_local", "throw", "true", "try", "typedef", "typeid", "typename", "union", "unsigned", "using", "virtual", "void", "volatile", "wchar_t", "while", "xor", "xor_eq"]
+
+-- C# 예약어 목록
+csharpReservedWords :: [String]
+csharpReservedWords = 
+    ["abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked", "class", "const", "continue", "decimal", "default", "delegate", "do", "double", "else", "enum", "event", "explicit", "extern", "false", "finally", "fixed", "float", "for", "foreach", "goto", "if", "implicit", "in", "int", "interface", "internal", "is", "lock", "long", "namespace", "new", "null", "object", "operator", "out", "override", "params", "private", "protected", "public", "readonly", "ref", "return", "sbyte", "sealed", "short", "sizeof", "stackalloc", "static", "string", "struct", "switch", "this", "throw", "true", "try", "typeof", "uint", "ulong", "unchecked", "unsafe", "ushort", "using", "virtual", "void", "volatile", "while", "Type", "Class", "Namespace", "Public", "Private", "Protected", "If", "For", "While", "Return"]
+
+-- Python 예약어 목록
+pythonReservedWords :: [String]
+pythonReservedWords = 
+    ["False", "None", "True", "and", "as", "assert", "break", "class", "continue", "def", "del", "elif", "else", "except", "finally", "for", "from", "global", "if", "import", "in", "is", "lambda", "nonlocal", "not", "or", "pass", "raise", "return", "try", "while", "with", "yield"]
+
+-- 예약어 검사 함수
+isReservedWord :: String -> String -> Bool
+isReservedWord "haskell" word = word `elem` haskellReservedWords
+isReservedWord "cpp" word = word `elem` cppReservedWords
+isReservedWord "csharp" word = word `elem` csharpReservedWords
+isReservedWord "python" word = word `elem` pythonReservedWords
+isReservedWord _ _ = False
+
+-- 예약어 충돌 시 대체 이름 생성
+generateSafeFieldName :: String -> String -> String
+generateSafeFieldName lang fieldName
+    | isReservedWord lang fieldName = fieldName ++ "Field"
+    | otherwise = fieldName
+
 -- 필드 코드 생성
 generateFieldCode :: Field -> String
 generateFieldCode field = 
     let fieldNameStr = unpack (fieldName field)
+        safeFieldName = generateSafeFieldName "haskell" fieldNameStr
         fieldTypeStr = generateFieldTypeCode (fieldType field)
         repeatedTypeStr = if fieldRule field == Repeated 
                          then "[" ++ fieldTypeStr ++ "]"
                          else fieldTypeStr
-    in unwords [fieldNameStr, "::", repeatedTypeStr, ","]
+    in unwords [safeFieldName, "::", repeatedTypeStr, ","]
 
 -- 필드 타입 코드 생성
 generateFieldTypeCode :: FieldType -> String
@@ -189,8 +241,15 @@ generateCppMessageCode msg =
         nestedTypes = messageNestedTypes msg
         fieldStrings = map generateCppFieldCode fields
         nestedTypeCodes = concatMap generateCppNestedTypeCode nestedTypes
+        getterFunctions = generateCppGetterFunctions typeName fields
+        setterFunctions = generateCppSetterFunctions typeName fields
     in nestedTypeCodes ++
        [unwords ["struct", typeName, "{"]] ++
+        ["public:"] ++
+        getterFunctions ++
+        [""] ++  -- getter와 setter 사이에 빈 줄 하나
+        setterFunctions ++
+        ["private:"] ++
         fieldStrings ++
         ["};", ""]
 
@@ -199,15 +258,56 @@ generateCppNestedTypeCode :: NestedType -> [String]
 generateCppNestedTypeCode (NestedMessage msg) = generateCppMessageCode msg
 generateCppNestedTypeCode (NestedEnum enum) = generateCppEnumCode enum
 
+-- C++ Getter 함수들 생성
+generateCppGetterFunctions :: String -> [Field] -> [String]
+generateCppGetterFunctions typeName fields = 
+    let getterFuncs = map (generateCppGetterFunction typeName) fields
+    in concat getterFuncs
+
+-- C++ 개별 Getter 함수 생성
+generateCppGetterFunction :: String -> Field -> [String]
+generateCppGetterFunction typeName field = 
+    let fieldNameStr = unpack (fieldName field)
+        safeFieldName = generateSafeFieldName "cpp" fieldNameStr
+        fieldTypeStr = generateCppFieldTypeCode (fieldType field)
+        repeatedTypeStr = if fieldRule field == Repeated 
+                         then "std::vector<" ++ fieldTypeStr ++ ">"
+                         else fieldTypeStr
+        getterName = "get" ++ capitalize safeFieldName
+    in [unwords ["  " ++ repeatedTypeStr, "&", getterName ++ "() { return " ++ safeFieldName ++ "; }"]
+       ,unwords ["  const " ++ repeatedTypeStr, "&", getterName ++ "() const { return " ++ safeFieldName ++ "; }"]
+       ]
+
+-- C++ Setter 함수들 생성
+generateCppSetterFunctions :: String -> [Field] -> [String]
+generateCppSetterFunctions typeName fields = 
+    let setterFuncs = map (generateCppSetterFunction typeName) fields
+    in concat setterFuncs
+
+-- C++ 개별 Setter 함수 생성
+generateCppSetterFunction :: String -> Field -> [String]
+generateCppSetterFunction typeName field = 
+    let fieldNameStr = unpack (fieldName field)
+        safeFieldName = generateSafeFieldName "cpp" fieldNameStr
+        fieldTypeStr = generateCppFieldTypeCode (fieldType field)
+        repeatedTypeStr = if fieldRule field == Repeated 
+                         then "std::vector<" ++ fieldTypeStr ++ ">"
+                         else fieldTypeStr
+        setterName = "set" ++ capitalize safeFieldName
+        paramName = safeFieldName ++ "Value"
+    in [unwords ["  void", setterName ++ "(const " ++ repeatedTypeStr ++ "& " ++ paramName ++ ") { " ++ safeFieldName ++ " = " ++ paramName ++ "; }"]
+       ]
+
 -- C++ 필드 코드 생성
 generateCppFieldCode :: Field -> String
 generateCppFieldCode field =
     let fieldNameStr = unpack (fieldName field)
+        safeFieldName = generateSafeFieldName "cpp" fieldNameStr
         fieldTypeStr = generateCppFieldTypeCode (fieldType field)
         repeatedTypeStr = if fieldRule field == Repeated
                          then "std::vector<" ++ fieldTypeStr ++ ">"
                          else fieldTypeStr
-    in "  " ++ repeatedTypeStr ++ " " ++ fieldNameStr ++ ";"
+    in "  " ++ repeatedTypeStr ++ " " ++ safeFieldName ++ ";"
 
 -- C++ 필드 타입 코드 생성
 generateCppFieldTypeCode :: FieldType -> String
@@ -330,15 +430,18 @@ generateCSharpNestedTypeCode :: NestedType -> [String]
 generateCSharpNestedTypeCode (NestedMessage msg) = generateCSharpMessageCode msg
 generateCSharpNestedTypeCode (NestedEnum enum) = generateCSharpEnumCode enum
 
+
 -- C# 필드 코드 생성
 generateCSharpFieldCode :: Field -> String
 generateCSharpFieldCode field =
     let fieldNameStr = unpack (fieldName field)
+        pascalCaseFieldName = toPascalCase fieldNameStr
+        safeFieldName = generateSafeFieldName "csharp" pascalCaseFieldName
         fieldTypeStr = generateCSharpFieldTypeCode (fieldType field)
         repeatedTypeStr = if fieldRule field == Repeated
                          then "List<" ++ fieldTypeStr ++ ">"
                          else fieldTypeStr
-    in "  public " ++ repeatedTypeStr ++ " " ++ fieldNameStr ++ " { get; set; }"
+    in "  public " ++ repeatedTypeStr ++ " " ++ safeFieldName ++ " { get; set; }"
 
 -- C# 필드 타입 코드 생성
 generateCSharpFieldTypeCode :: FieldType -> String

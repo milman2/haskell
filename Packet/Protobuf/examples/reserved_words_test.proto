@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package test;
+
+message ReservedTest {
+  string type = 1;        // Haskell 예약어
+  string class = 2;       // Haskell, C++, C# 예약어
+  string namespace = 3;   // C++ 예약어
+  string public = 4;      // C++ 예약어
+  string private = 5;     // C++ 예약어
+  string protected = 6;   // C++ 예약어
+  string if = 7;          // 모든 언어 예약어
+  string for = 8;         // 모든 언어 예약어
+  string while = 9;       // 모든 언어 예약어
+  string return = 10;     // 모든 언어 예약어
+}

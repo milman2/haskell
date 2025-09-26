@@ -11,6 +11,7 @@ Haskell DSL을 사용하여 Protocol Buffers 스타일의 패킷 생성기를 �
 - **`.proto` 파일 파싱**: Megaparsec를 사용한 강력한 파서
 - **다중 언어 코드 생성**: Haskell, C++, C# 지원
 - **타입 안전한 코드 생성**: 각 언어의 관례에 맞는 타입 생성
+- **자동 Getter/Setter 생성**: 각 필드에 대한 접근자 함수 자동 생성
 - **CLI 도구**: 사용자 친화적인 명령줄 인터페이스
 - **유연한 출력 옵션**: 출력 디렉토리 및 파일명 지정
 - **검증 시스템**: 파싱된 구조의 유효성 검사
@@ -91,36 +92,102 @@ parseMessage = do
 - **Haskell 타입 생성**: 메시지를 Haskell 데이터 타입으로 변환
 - **C++ 헤더 생성**: C++ struct, enum class, 클래스 생성
 - **C# 클래스 생성**: C# class, enum, interface 생성
+- **C# PascalCase 변환**: snake_case 필드명을 PascalCase로 자동 변환
+- **자동 필드 접근자**: Haskell에서는 레코드 필드 접근자 자동 생성, C++에서는 Getter/Setter 함수 생성
+- **예약어 검사**: 각 언어의 예약어와 충돌하는 필드명을 자동으로 안전한 이름으로 변환
 - **열거형 생성**: Protobuf enum을 각 언어의 enum으로 변환
 - **서비스 생성**: RPC 서비스를 각 언어의 인터페이스로 변환
 - **타입 매핑**: Protobuf 타입을 각 언어의 적절한 타입으로 매핑
 - **네임스페이스 지원**: package 선언을 각 언어의 네임스페이스로 변환
 
 ```haskell
--- 생성되는 Haskell 코드 예시
+-- 생성되는 Haskell 코드 예시 (레코드 필드 접근자 자동 생성)
 data Person = Person
     { name :: Text
-    , age :: Int32
+    , id :: Int32
     , email :: Text
+    , phones :: [PhoneNumber]
     } deriving (Show, Eq, Generic)
+
+-- 레코드 필드 접근자는 자동으로 생성됩니다:
+-- name :: Person -> Text        -- name 필드 접근자
+-- id :: Person -> Int32         -- id 필드 접근자  
+-- email :: Person -> Text       -- email 필드 접근자
+-- phones :: Person -> [PhoneNumber] -- phones 필드 접근자
+
+-- 필드 업데이트는 레코드 업데이트 문법 사용:
+-- person {name = "New Name"}    -- name 필드만 업데이트
+-- person {id = 123, email = "new@email.com"} -- 여러 필드 동시 업데이트
+
+-- 예약어 검사 예시 (type은 Haskell 예약어)
+data PhoneNumber = PhoneNumber {
+  number :: Text ,
+  typeField :: PhoneType ,  -- type -> typeField로 자동 변환
+} deriving (Show, Eq, Generic)
 ```
 
 ```cpp
-// 생성되는 C++ 코드 예시
+// 생성되는 C++ 코드 예시 (Getter/Setter 포함)
 struct Person {
+public:
+  // Getter 함수들
+  std::string & getName() { return name; }
+  const std::string & getName() const { return name; }
+  
+  int32_t & getAge() { return age; }
+  const int32_t & getAge() const { return age; }
+  
+  std::string & getEmail() { return email; }
+  const std::string & getEmail() const { return email; }
+  
+  // Setter 함수들
+  void setName(const std::string& nameValue) { name = nameValue; }
+  void setAge(const int32_t& ageValue) { age = ageValue; }
+  void setEmail(const std::string& emailValue) { email = emailValue; }
+
+private:
   std::string name;
   int32_t age;
   std::string email;
 };
+
+// 예약어 검사 예시 (class는 C++ 예약어)
+struct ReservedTest {
+public:
+  std::string & getClassField() { return classField; }  // class -> classField
+  void setClassField(const std::string& value) { classField = value; }
+private:
+  std::string classField;  // class -> classField로 자동 변환
+};
 ```
 
 ```csharp
-// 생성되는 C# 코드 예시
+// 생성되는 C# 코드 예시 (PascalCase Property)
 public class Person
 {
-  public string name { get; set; }
-  public int age { get; set; }
-  public string email { get; set; }
+  public string Name { get; set; }
+  public int Id { get; set; }
+  public string Email { get; set; }
+  public List<PhoneNumber> Phones { get; set; }
+}
+
+// snake_case 필드가 PascalCase로 자동 변환되는 예시
+public class UserProfile
+{
+  public string FirstName { get; set; }      // first_name -> FirstName
+  public string LastName { get; set; }       // last_name -> LastName
+  public int UserId { get; set; }            // user_id -> UserId
+  public string EmailAddress { get; set; }   // email_address -> EmailAddress
+  public bool IsActive { get; set; }         // is_active -> IsActive
+  public List<string> PhoneNumbers { get; set; } // phone_numbers -> PhoneNumbers
+}
+
+// 예약어 검사 예시 (Class는 C# 예약어)
+public class ReservedTest
+{
+  public string ClassField { get; set; }  // class -> ClassField로 자동 변환
+  public string IfField { get; set; }     // if -> IfField로 자동 변환
+  public string ForField { get; set; }    // for -> ForField로 자동 변환
 }
 ```
 
@@ -346,6 +413,7 @@ cabal run protobuf-tests
 - [x] 기본 타입 시스템
 - [x] 파서 시스템
 - [x] 다중 언어 코드 생성기 (Haskell, C++, C#)
+- [x] 자동 Getter/Setter 함수 생성
 - [x] CLI 도구 (언어 선택, 출력 옵션)
 - [x] 파일 생성 위치 지정
 - [x] 자동 디렉토리 생성
