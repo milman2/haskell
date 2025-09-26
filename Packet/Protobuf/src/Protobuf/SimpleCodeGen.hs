@@ -370,7 +370,7 @@ generateCppEnumCode :: ProtobufEnum -> [String]
 generateCppEnumCode enum =
     let typeName = unpack (enumName enum)
         values = enumValues enum
-        valueStrings = map generateCppEnumValueCode values
+        valueStrings = addCommasToEnumValues (map generateCppEnumValueCode values)
     in [unwords ["enum class", typeName, "{"]] ++
         map ("  " ++) valueStrings ++
         ["};", ""]
@@ -380,7 +380,7 @@ generateCppEnumValueCode :: EnumValue -> String
 generateCppEnumValueCode enumValue =
     let name = unpack (enumValueName enumValue)
         number = enumValueNumber enumValue
-    in name ++ " = " ++ show number ++ ","
+    in name ++ " = " ++ show number
 
 -- C++ 서비스 코드 생성
 generateCppServiceCode :: Service -> [String]

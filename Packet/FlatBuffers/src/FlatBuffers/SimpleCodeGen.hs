@@ -205,7 +205,7 @@ generateCppEnumCode :: FlatBuffersEnum -> [String]
 generateCppEnumCode enum =
     let typeName = unpack (enumName enum)
         values = enumValues enum
-        valueStrings = map generateCppEnumValueCode values
+        valueStrings = addCommasToEnumValues (map generateCppEnumValueCode values)
     in [unwords ["enum class", typeName, "{"]] ++
         map ("  " ++) valueStrings ++
         ["};", ""]
@@ -217,7 +217,7 @@ generateCppEnumValueCode value =
         number = case enumValueNumber value of
             Just n -> " = " ++ show n
             Nothing -> ""
-    in name ++ number ++ ","
+    in name ++ number
 
 -- C++ Union 코드 생성 (std::variant 사용)
 generateCppUnionCode :: Union -> [String]
