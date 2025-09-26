@@ -357,7 +357,7 @@ generateCSharpEnumCode :: FlatBuffersEnum -> [String]
 generateCSharpEnumCode enum =
     let typeName = unpack (enumName enum)
         values = enumValues enum
-        valueStrings = map generateCSharpEnumValueCode values
+        valueStrings = addCommasToEnumValues (map generateCSharpEnumValueCode values)
     in [unwords ["public enum", typeName]] ++
         ["{"] ++
         map ("  " ++) valueStrings ++
@@ -370,7 +370,13 @@ generateCSharpEnumValueCode value =
         number = case enumValueNumber value of
             Just n -> " = " ++ show n
             Nothing -> ""
-    in name ++ number ++ ","
+    in name ++ number
+
+-- C# Enum 값들에 콤마 추가 (마지막 값 제외)
+addCommasToEnumValues :: [String] -> [String]
+addCommasToEnumValues [] = []
+addCommasToEnumValues [x] = [x]
+addCommasToEnumValues (x:xs) = (x ++ ",") : addCommasToEnumValues xs
 
 -- C# Union 코드 생성 (abstract class with derived classes)
 generateCSharpUnionCode :: Union -> [String]

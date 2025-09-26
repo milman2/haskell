@@ -504,7 +504,7 @@ generateCSharpEnumCode :: ProtobufEnum -> [String]
 generateCSharpEnumCode enum =
     let typeName = unpack (enumName enum)
         values = enumValues enum
-        valueStrings = map generateCSharpEnumValueCode values
+        valueStrings = addCommasToEnumValues (map generateCSharpEnumValueCode values)
     in [unwords ["public enum", typeName]] ++
         ["{"] ++
         map ("  " ++) valueStrings ++
@@ -515,7 +515,13 @@ generateCSharpEnumValueCode :: EnumValue -> String
 generateCSharpEnumValueCode enumValue =
     let name = unpack (enumValueName enumValue)
         number = enumValueNumber enumValue
-    in name ++ " = " ++ show number ++ ","
+    in name ++ " = " ++ show number
+
+-- C# Enum 값들에 콤마 추가 (마지막 값 제외)
+addCommasToEnumValues :: [String] -> [String]
+addCommasToEnumValues [] = []
+addCommasToEnumValues [x] = [x]
+addCommasToEnumValues (x:xs) = (x ++ ",") : addCommasToEnumValues xs
 
 -- C# 서비스 코드 생성
 generateCSharpServiceCode :: Service -> [String]
