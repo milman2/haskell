@@ -15,34 +15,18 @@ common warnings
 
 executable capnproto-generator
     import:           warnings
-    main-is:          Main.hs
+    main-is:          SimpleMain.hs
     build-depends:
         base ^>=4.20.0.0,
         text,
         megaparsec,
-        template-haskell,
-        prettyprinter,
-        bytestring,
-        binary,
-        cereal,
         optparse-applicative,
-        containers,
-        mtl,
-        primitive,
-        vector,
-        network,
-        async,
-        stm
+        filepath,
+        directory
     other-modules:
-        CapnProto.Parser,
-        CapnProto.AST,
-        CapnProto.Schema,
-        CapnProto.CodeGen,
-        CapnProto.Serialize,
-        CapnProto.RPC,
-        CapnProto.MemoryLayout,
-        CapnProto.Network,
-        CapnProto.Types
+        CapnProto.SimpleTypes,
+        CapnProto.SimpleParser,
+        CapnProto.SimpleCodeGen
     hs-source-dirs:   src
 
 test-suite capnproto-tests

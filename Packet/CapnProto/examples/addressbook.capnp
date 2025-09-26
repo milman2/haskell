@@ -1,12 +1,4 @@
-# Address book example for Cap'n Proto
-
-@0x8b8b8b8b8b8b8b8b;  # Unique file ID
-
-struct Date {
-  year @0 :UInt16;
-  month @1 :UInt8;
-  day @2 :UInt8;
-}
+namespace tutorial;
 
 struct Person {
   id @0 :UInt32;
@@ -27,14 +19,16 @@ enum PhoneType {
   work @2;
 }
 
-struct AddressBook {
-  people @0 :List(Person);
+struct Date {
+  year @0 :UInt16;
+  month @1 :UInt8;
+  day @2 :UInt8;
 }
 
-# RPC Interface
 interface AddressBookService {
-  addPerson @0 (person :Person) -> (id :UInt32);
-  getPerson @1 (id :UInt32) -> (person :Person);
-  listPeople @2 () -> (people :List(Person));
-  searchPeople @3 (query :Text) -> (people :List(Person));
+  addPerson(Person person) -> UInt32;
+  getPerson(UInt32 id) -> Person;
+  listPeople() -> List(Person);
 }
+
+const MAX_PHONES = 10;
