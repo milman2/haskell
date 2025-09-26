@@ -182,13 +182,17 @@ testConfigPDSL = do
                     putStrLn "Individual values:"
                     case Map.lookup "app_name" (configSections finalEnv) of
                         Just section -> case Map.lookup "app_name" section of
-                            Just (CString name) -> putStrLn $ "App name: " ++ unpack name
+                            Just (CSection innerSection) -> case Map.lookup "app_name" innerSection of
+                                Just (CString name) -> putStrLn $ "App name: " ++ unpack name
+                                _ -> putStrLn "App name value not found"
                             _ -> putStrLn "App name not found"
                         _ -> putStrLn "App name section not found"
                     
                     case Map.lookup "port" (configSections finalEnv) of
                         Just section -> case Map.lookup "port" section of
-                            Just (CNumber port) -> putStrLn $ "Port: " ++ show port
+                            Just (CSection innerSection) -> case Map.lookup "port" innerSection of
+                                Just (CNumber port) -> putStrLn $ "Port: " ++ show port
+                                _ -> putStrLn "Port value not found"
                             _ -> putStrLn "Port not found"
                         _ -> putStrLn "Port section not found"
                     
