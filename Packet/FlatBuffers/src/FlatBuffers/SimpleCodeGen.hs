@@ -80,7 +80,7 @@ generateHaskellEnumCode :: FlatBuffersEnum -> [String]
 generateHaskellEnumCode enum =
     let typeName = unpack (enumName enum)
         values = enumValues enum
-        valueStrings = map (unpack . enumValueName) values
+        valueStrings = map (capitalize . unpack . enumValueName) values
     in [unwords ["data", typeName, "=", intercalate " | " valueStrings, "deriving (Show, Eq, Generic, Enum, Bounded)", ""]]
 
 -- Haskell Union 코드 생성

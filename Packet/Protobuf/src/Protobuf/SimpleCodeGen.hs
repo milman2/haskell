@@ -176,7 +176,7 @@ generateEnumCode :: ProtobufEnum -> [String]
 generateEnumCode enum = 
     let typeName = unpack (enumName enum)
         values = enumValues enum
-        valueStrings = map (unpack . enumValueName) values
+        valueStrings = map (capitalize . unpack . enumValueName) values
     in [unwords ["data", typeName, "="] ++
         " " ++ intercalate " | " valueStrings ++
         " deriving (Show, Eq, Generic)"

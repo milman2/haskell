@@ -124,7 +124,10 @@ generateHaskellEnumCode enum =
 
 -- Haskell Enum 값 코드 생성
 generateHaskellEnumValueCode :: EnumValue -> String
-generateHaskellEnumValueCode value = unpack (enumValueName value)
+generateHaskellEnumValueCode value = 
+    let name = unpack (enumValueName value)
+        pascalName = capitalize name
+    in pascalName
 
 -- Haskell Const 코드 생성
 generateHaskellConstCode :: Const -> [String]
