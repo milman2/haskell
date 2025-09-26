@@ -38,17 +38,17 @@ generateMessageCode msg =
     let typeName = unpack (messageName msg)
         fields = messageFields msg
         fieldStrings = map generateFieldCode fields
-    in [unwords ["data", typeName, "=", typeName, "{"] ++
-        map ("  " ++) fieldStrings ++
+        indentedFields = map ("  " ++) fieldStrings
+    in [unwords ["data", typeName, "=", typeName, "{"]] ++
+        indentedFields ++
         ["} deriving (Show, Eq, Generic)"]
-        ]
 
 -- 필드 코드 생성
 generateFieldCode :: Field -> String
 generateFieldCode field = 
-    let fieldName = unpack (fieldName field)
-        fieldType = generateFieldTypeCode (fieldType field)
-    in unwords [fieldName, "::", fieldType, ","]
+    let fieldNameStr = unpack (fieldName field)
+        fieldTypeStr = generateFieldTypeCode (fieldType field)
+    in unwords [fieldNameStr, "::", fieldTypeStr, ","]
 
 -- 필드 타입 코드 생성
 generateFieldTypeCode :: FieldType -> String
@@ -83,7 +83,7 @@ generateEnumCode enum =
         valueStrings = map (unpack . enumValueName) values
     in [unwords ["data", typeName, "="] ++
         intercalate " | " valueStrings ++
-        ["deriving (Show, Eq, Generic)"]
+        " deriving (Show, Eq, Generic)"
         ]
 
 -- 서비스 코드 생성
@@ -92,17 +92,17 @@ generateServiceCode service =
     let className = unpack (serviceName service)
         methods = serviceMethods service
         methodStrings = map generateMethodCode methods
-    in [unwords ["class", className, "m where"] ++
-        map ("  " ++) methodStrings
-        ]
+        indentedMethods = map ("  " ++) methodStrings
+    in [unwords ["class", className, "m where"]] ++
+        indentedMethods
 
 -- 메서드 코드 생성
 generateMethodCode :: Method -> String
 generateMethodCode method = 
-    let methodName = unpack (methodName method)
-        inputType = unpack (methodInputType method)
-        outputType = unpack (methodOutputType method)
-    in unwords [methodName, "::", inputType, "->", "m", outputType]
+    let methodNameStr = unpack (methodName method)
+        inputTypeStr = unpack (methodInputType method)
+        outputTypeStr = unpack (methodOutputType method)
+    in unwords [methodNameStr, "::", inputTypeStr, "->", "m", outputTypeStr]
 
 -- 2. 유틸리티 함수들
 

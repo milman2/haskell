@@ -13,28 +13,40 @@ import qualified Data.Text as T
 -- 파서 타입 정의
 type Parser = Parsec Void Text
 
--- 공백 처리
+-- 1. 렉서(Lexer) 정의
+-- 주석 및 공백 처리
 spaceConsumer :: Parser ()
-spaceConsumer = L.space space1 (L.skipLineComment "//") (L.skipBlockComment "/*" "*/")
+spaceConsumer = L.space
+    space1                          -- 공백
+    (L.skipLineComment "//")        -- 한 줄 주석
+    (L.skipBlockComment "/*" "*/")  -- 블록 주석
 
--- 토큰 파서
+-- 렉심(lexeme) 파서: 파싱 후 공백을 소비
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme spaceConsumer
 
--- 심볼 파서
+-- 심볼 파서: 특정 문자열을 파싱하고 공백을 소비
 symbol :: Text -> Parser Text
-symbol = L.symbol spaceConsumer
+symbol = lexeme . string
 
--- 키워드 파서
+-- 키워드 파서: 특정 키워드를 파싱하고 식별자와 겹치지 않도록 처리
 keyword :: Text -> Parser Text
-keyword = L.symbol spaceConsumer
+keyword kw = lexeme (string kw <* notFollowedBy alphaNumChar)
 
--- 식별자 파서
+-- 식별자 파서: 알파벳으로 시작하고 알파벳, 숫자, 밑줄을 포함
 identifier :: Parser Text
 identifier = lexeme $ do
-    first <- letterChar <|> char '_'
-    rest <- many (alphaNumChar <|> char '_')
-    return $ pack (first : rest)
+    h <- letterChar <|> char '_'
+    t <- many (alphaNumChar <|> char '_')
+    return (pack (h:t))
+
+-- 정수 파서
+integer :: Parser Int
+integer = lexeme L.decimal
+
+-- 실수 파서
+float :: Parser Double
+float = lexeme L.float
 
 -- 문자열 리터럴 파서
 stringLiteral :: Parser Text
@@ -46,83 +58,14 @@ stringLiteral = lexeme $ do
   where
     escapedChar = do
         char '\\'
-        c <- anyChar
+        c <- oneOf ['\\', '"', 'n', 'r', 't']
         return c
 
--- 숫자 파서
-number :: Parser Int
-number = lexeme L.decimal
-
--- 파일 파서
-parseFile :: Parser ProtobufFile
-parseFile = do
-    syntax <- parseSyntax
-    package <- optional parsePackage
-    definitions <- many parseFileDefinition
-    return $ ProtobufFile syntax package definitions
-
--- syntax 파서
-parseSyntax :: Parser Text
-parseSyntax = do
-    keyword "syntax"
-    char '='
-    syntax <- stringLiteral
-    char ';'
-    return syntax
-
--- package 파서
-parsePackage :: Parser Text
-parsePackage = do
-    keyword "package"
-    package <- identifier
-    char ';'
-    return package
-
--- 파일 정의 파서
-parseFileDefinition :: Parser FileDefinition
-parseFileDefinition = 
-    FileMessage <$> parseMessage <|>
-    FileEnum <$> parseEnum <|>
-    FileService <$> parseService
-
--- 메시지 파서
-parseMessage :: Parser Message
-parseMessage = do
-    keyword "message"
-    name <- identifier
-    char '{'
-    fields <- many parseField
-    char '}'
-    return $ Message name fields
-
--- 필드 파서
-parseField :: Parser Field
-parseField = do
-    rule <- parseFieldRule
-    fieldType <- parseFieldType
-    name <- identifier
-    char '='
-    number <- number
-    char ';'
-    return $ Field rule fieldType name number
-
--- 필드 규칙 파서
-parseFieldRule :: Parser FieldRule
-parseFieldRule = 
-    (keyword "required" >> return Required) <|>
-    (keyword "optional" >> return Optional) <|>
-    (keyword "repeated" >> return Repeated) <|>
-    return Optional
-
--- 필드 타입 파서
-parseFieldType :: Parser FieldType
-parseFieldType = 
-    ScalarType <$> parseScalarType <|>
-    UserDefinedType <$> identifier
+-- 2. Protobuf 문법 파서
 
 -- 스칼라 타입 파서
-parseScalarType :: Parser ProtobufScalarType
-parseScalarType = 
+parseProtobufScalarType :: Parser ProtobufScalarType
+parseProtobufScalarType =
     (keyword "double" >> return DoubleType) <|>
     (keyword "float" >> return FloatType) <|>
     (keyword "int32" >> return Int32Type) <|>
@@ -139,50 +82,109 @@ parseScalarType =
     (keyword "string" >> return StringType) <|>
     (keyword "bytes" >> return BytesType)
 
+-- 필드 규칙 파서
+parseFieldRule :: Parser FieldRule
+parseFieldRule =
+    (keyword "required" >> return Required) <|>
+    (keyword "optional" >> return Optional) <|>
+    (keyword "repeated" >> return Repeated)
+
+-- 필드 타입 파서
+parseFieldType :: Parser FieldType
+parseFieldType =
+    (ScalarType <$> parseProtobufScalarType) <|>
+    (UserDefinedType <$> identifier)
+
+-- 필드 파서
+parseField :: Parser Field
+parseField = do
+    rule <- optional parseFieldRule
+    typ <- parseFieldType
+    name <- identifier
+    symbol "="
+    num <- integer
+    symbol ";"
+    return $ Field (maybe Optional id rule) typ name num
+
+-- 메시지 파서
+parseMessage :: Parser Message
+parseMessage = do
+    keyword "message"
+    name <- identifier
+    symbol "{"
+    fields <- many parseField
+    symbol "}"
+    return $ Message name fields
+
 -- 열거형 파서
 parseEnum :: Parser ProtobufEnum
 parseEnum = do
     keyword "enum"
     name <- identifier
-    char '{'
+    symbol "{"
     values <- many parseEnumValue
-    char '}'
+    symbol "}"
     return $ ProtobufEnum name values
 
 -- 열거형 값 파서
 parseEnumValue :: Parser EnumValue
 parseEnumValue = do
     name <- identifier
-    char '='
-    number <- number
-    char ';'
-    return $ EnumValue name number
+    symbol "="
+    num <- integer
+    symbol ";"
+    return $ EnumValue name num
 
 -- 서비스 파서
 parseService :: Parser Service
 parseService = do
     keyword "service"
     name <- identifier
-    char '{'
+    symbol "{"
     methods <- many parseMethod
-    char '}'
+    symbol "}"
     return $ Service name methods
 
--- 메서드 파서
+-- 서비스 메서드 파서
 parseMethod :: Parser Method
 parseMethod = do
     keyword "rpc"
     name <- identifier
-    char '('
+    symbol "("
     inputType <- identifier
-    char ')'
+    symbol ")"
     keyword "returns"
-    char '('
+    symbol "("
     outputType <- identifier
-    char ')'
-    char ';'
+    symbol ")"
+    symbol ";"
     return $ Method name inputType outputType
 
--- 메인 파서 함수
-parseProtobufFile :: Text -> Either (ParseErrorBundle Text Void) ProtobufFile
-parseProtobufFile input = parse parseFile "" input
+-- 파일 정의 파서
+parseFileDefinition :: Parser FileDefinition
+parseFileDefinition =
+    (FileMessage <$> parseMessage) <|>
+    (FileEnum <$> parseEnum) <|>
+    (FileService <$> parseService)
+
+-- syntax 파서
+parseSyntax :: Parser Text
+parseSyntax = do
+    keyword "syntax"
+    symbol "="
+    syntax <- stringLiteral
+    symbol ";"
+    return syntax
+
+-- Protobuf 파일 파서
+parseProtobufFile :: Parser ProtobufFile
+parseProtobufFile = do
+    spaceConsumer
+    syntax <- optional parseSyntax
+    definitions <- many parseFileDefinition
+    eof
+    return $ ProtobufFile (maybe "proto2" id syntax) Nothing definitions
+
+-- 최상위 파싱 함수
+parseProto :: Text -> Either (ParseErrorBundle Text Void) ProtobufFile
+parseProto = parse parseProtobufFile "input.proto"

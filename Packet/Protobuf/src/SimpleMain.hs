@@ -2,7 +2,8 @@
 
 module Main where
 
-import Protobuf.SimpleParser
+import qualified Protobuf.SimpleParser as P
+import Text.Megaparsec (parse)
 import Protobuf.SimpleCodeGen
 import Protobuf.SimpleTypes
 import Data.Text (Text, pack, unpack)
@@ -10,7 +11,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import System.Environment (getArgs)
 import System.Exit (exitWith, ExitCode(ExitFailure))
-import Options.Applicative
+import Options.Applicative (Parser, ParserInfo, argument, option, str, metavar, help, long, short, optional, switch, info, fullDesc, progDesc, header, helper, execParser, (<**>))
 
 -- 1. CLI 옵션 정의
 
@@ -60,7 +61,7 @@ processProtobufFile options = do
     else return ()
     
     -- 파일 파싱
-    case parseProtobufFile inputContent of
+    case parse P.parseProtobufFile "input.proto" inputContent of
         Left parseError -> do
             let errorMsg = "Parse error: " ++ show parseError
             return $ Left errorMsg
