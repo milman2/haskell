@@ -15,25 +15,16 @@ common warnings
 
 executable protobuf-generator
     import:           warnings
-    main-is:          Main.hs
+    main-is:          SimpleMain.hs
     build-depends:
         base ^>=4.20.0.0,
         text,
         megaparsec,
-        template-haskell,
-        prettyprinter,
-        bytestring,
-        binary,
-        cereal,
-        optparse-applicative,
-        containers,
-        mtl
+        optparse-applicative
     other-modules:
-        Protobuf.Parser,
-        Protobuf.AST,
-        Protobuf.CodeGen,
-        Protobuf.Serialize,
-        Protobuf.Types
+        Protobuf.SimpleParser,
+        Protobuf.SimpleCodeGen,
+        Protobuf.SimpleTypes
     hs-source-dirs:   src
 
 test-suite protobuf-tests
