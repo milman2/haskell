@@ -59,7 +59,7 @@ generateHaskellTableCode table =
     let typeName = unpack (tableName table)
         fields = tableFields table
         fieldStrings = map generateHaskellFieldCode fields
-        indentedFields = map ("  " ++) fieldStrings
+        indentedFields = addCommasToFields fieldStrings
     in [unwords ["data", typeName, "=", typeName, "{"]] ++
         indentedFields ++
         ["} deriving (Show, Eq, Generic)", ""]
@@ -70,7 +70,7 @@ generateHaskellStructCode struct =
     let typeName = unpack (structName struct)
         fields = structFields struct
         fieldStrings = map generateHaskellFieldCode fields
-        indentedFields = map ("  " ++) fieldStrings
+        indentedFields = addCommasToFields fieldStrings
     in [unwords ["data", typeName, "=", typeName, "{"]] ++
         indentedFields ++
         ["} deriving (Show, Eq, Generic)", ""]
@@ -97,7 +97,7 @@ generateHaskellFieldCode field =
     let fieldNameStr = unpack (fieldName field)
         safeFieldName = generateSafeFieldName "haskell" fieldNameStr
         fieldTypeStr = generateHaskellFieldTypeCode (fieldType field)
-    in unwords [safeFieldName, "::", fieldTypeStr, ","]
+    in unwords [safeFieldName, "::", fieldTypeStr]
 
 -- Haskell 필드 타입 코드 생성
 generateHaskellFieldTypeCode :: FieldType -> String
@@ -505,6 +505,12 @@ generatePythonScalarTypeCode DoubleType = "float"
 generatePythonScalarTypeCode StringType = "str"
 
 -- 5. 공통 유틸리티 함수
+
+-- 필드에 쉼표 추가 (마지막 필드 제외)
+addCommasToFields :: [String] -> [String]
+addCommasToFields [] = []
+addCommasToFields [lastField] = ["  " ++ lastField]
+addCommasToFields (field:rest) = ("  " ++ field ++ " ,") : addCommasToFields rest
 
 -- 첫 글자 대문자로 변환
 capitalize :: String -> String

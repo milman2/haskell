@@ -55,17 +55,23 @@ generateDefinitionCode (FileService service) = generateServiceCode service
 
 -- 메시지 코드 생성
 generateMessageCode :: Message -> [String]
-generateMessageCode msg = 
+generateMessageCode msg =
     let typeName = unpack (messageName msg)
         fields = messageFields msg
         nestedTypes = messageNestedTypes msg
         fieldStrings = map generateFieldCode fields
-        indentedFields = map ("  " ++) fieldStrings
+        indentedFields = addCommasToFields fieldStrings
         nestedTypeCodes = concatMap (++ [""]) (map generateNestedTypeCode nestedTypes)
     in nestedTypeCodes ++
        [unwords ["data", typeName, "=", typeName, "{"]] ++
         indentedFields ++
         ["} deriving (Show, Eq, Generic)", ""]
+
+-- 필드에 쉼표 추가 (마지막 필드 제외)
+addCommasToFields :: [String] -> [String]
+addCommasToFields [] = []
+addCommasToFields [lastField] = ["  " ++ lastField]
+addCommasToFields (field:rest) = ("  " ++ field ++ " ,") : addCommasToFields rest
 
 -- 중첩된 타입 코드 생성
 generateNestedTypeCode :: NestedType -> [String]
@@ -132,7 +138,7 @@ generateFieldCode field =
         repeatedTypeStr = if fieldRule field == Repeated 
                          then "[" ++ fieldTypeStr ++ "]"
                          else fieldTypeStr
-    in unwords [safeFieldName, "::", repeatedTypeStr, ","]
+    in unwords [safeFieldName, "::", repeatedTypeStr]
 
 -- 필드 타입 코드 생성
 generateFieldTypeCode :: FieldType -> String
