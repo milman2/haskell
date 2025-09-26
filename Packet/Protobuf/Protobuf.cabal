@@ -20,7 +20,9 @@ executable protobuf-generator
         base ^>=4.20.0.0,
         text,
         megaparsec,
-        optparse-applicative
+        optparse-applicative,
+        filepath,
+        directory
     other-modules:
         Protobuf.SimpleParser,
         Protobuf.SimpleCodeGen,

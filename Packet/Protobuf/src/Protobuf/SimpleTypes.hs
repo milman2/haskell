@@ -48,10 +48,17 @@ data Field = Field
     , fieldNumber :: Int
     } deriving (Show, Eq)
 
+-- 중첩된 타입
+data NestedType
+    = NestedMessage Message
+    | NestedEnum ProtobufEnum
+    deriving (Show, Eq)
+
 -- 메시지 정의
 data Message = Message
     { messageName :: Text
     , messageFields :: [Field]
+    , messageNestedTypes :: [NestedType]
     } deriving (Show, Eq)
 
 -- 열거형 정의

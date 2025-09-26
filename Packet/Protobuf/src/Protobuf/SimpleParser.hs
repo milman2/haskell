@@ -112,9 +112,11 @@ parseMessage = do
     keyword "message"
     name <- identifier
     symbol "{"
-    fields <- many parseField
+    definitions <- many (try (NestedMessageDef <$> parseMessage) <|> try (NestedEnumDef <$> parseEnum) <|> (FileField <$> parseField))
     symbol "}"
-    return $ Message name fields
+    let fields = [f | FileField f <- definitions]
+    let nestedTypes = [NestedMessage m | NestedMessageDef m <- definitions] ++ [NestedEnum e | NestedEnumDef e <- definitions]
+    return $ Message name fields nestedTypes
 
 -- 열거형 파서
 parseEnum :: Parser ProtobufEnum
@@ -176,14 +178,30 @@ parseSyntax = do
     symbol ";"
     return syntax
 
+-- package 파서
+parsePackage :: Parser Text
+parsePackage = do
+    keyword "package"
+    package <- identifier
+    symbol ";"
+    return package
+
 -- Protobuf 파일 파서
 parseProtobufFile :: Parser ProtobufFile
 parseProtobufFile = do
     spaceConsumer
     syntax <- optional parseSyntax
+    package <- optional parsePackage
     definitions <- many parseFileDefinition
     eof
-    return $ ProtobufFile (maybe "proto2" id syntax) Nothing definitions
+    return $ ProtobufFile (maybe "proto2" id syntax) package definitions
+
+-- 메시지 정의 헬퍼 타입
+data MessageDefinition
+    = FileField Field
+    | NestedMessageDef Message
+    | NestedEnumDef ProtobufEnum
+    deriving (Show, Eq)
 
 -- 최상위 파싱 함수
 parseProto :: Text -> Either (ParseErrorBundle Text Void) ProtobufFile

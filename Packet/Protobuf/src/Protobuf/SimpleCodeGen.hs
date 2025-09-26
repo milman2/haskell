@@ -37,18 +37,30 @@ generateMessageCode :: Message -> [String]
 generateMessageCode msg = 
     let typeName = unpack (messageName msg)
         fields = messageFields msg
+        nestedTypes = messageNestedTypes msg
         fieldStrings = map generateFieldCode fields
         indentedFields = map ("  " ++) fieldStrings
-    in [unwords ["data", typeName, "=", typeName, "{"]] ++
+        nestedTypeCodes = concatMap (++ [""]) (map generateNestedTypeCode nestedTypes)
+    in nestedTypeCodes ++
+       [""] ++  -- 빈 줄 추가
+       [unwords ["data", typeName, "=", typeName, "{"]] ++
         indentedFields ++
         ["} deriving (Show, Eq, Generic)"]
+
+-- 중첩된 타입 코드 생성
+generateNestedTypeCode :: NestedType -> [String]
+generateNestedTypeCode (NestedMessage msg) = generateMessageCode msg
+generateNestedTypeCode (NestedEnum enum) = generateEnumCode enum
 
 -- 필드 코드 생성
 generateFieldCode :: Field -> String
 generateFieldCode field = 
     let fieldNameStr = unpack (fieldName field)
         fieldTypeStr = generateFieldTypeCode (fieldType field)
-    in unwords [fieldNameStr, "::", fieldTypeStr, ","]
+        repeatedTypeStr = if fieldRule field == Repeated 
+                         then "[" ++ fieldTypeStr ++ "]"
+                         else fieldTypeStr
+    in unwords [fieldNameStr, "::", repeatedTypeStr, ","]
 
 -- 필드 타입 코드 생성
 generateFieldTypeCode :: FieldType -> String
@@ -82,9 +94,10 @@ generateEnumCode enum =
         values = enumValues enum
         valueStrings = map (unpack . enumValueName) values
     in [unwords ["data", typeName, "="] ++
-        intercalate " | " valueStrings ++
+        " " ++ intercalate " | " valueStrings ++
         " deriving (Show, Eq, Generic)"
-        ]
+        ] ++
+        [""]  -- 빈 줄 추가
 
 -- 서비스 코드 생성
 generateServiceCode :: Service -> [String]
@@ -93,16 +106,29 @@ generateServiceCode service =
         methods = serviceMethods service
         methodStrings = map generateMethodCode methods
         indentedMethods = map ("  " ++) methodStrings
-    in [unwords ["class", className, "m where"]] ++
+    in [""] ++  -- 빈 줄 추가
+       [unwords ["class", className, "m where"]] ++
         indentedMethods
 
 -- 메서드 코드 생성
 generateMethodCode :: Method -> String
 generateMethodCode method = 
     let methodNameStr = unpack (methodName method)
-        inputTypeStr = unpack (methodInputType method)
-        outputTypeStr = unpack (methodOutputType method)
+        inputTypeStr = capitalizeTypeName (unpack (methodInputType method))
+        outputTypeStr = capitalizeTypeName (unpack (methodOutputType method))
     in unwords [methodNameStr, "::", inputTypeStr, "->", "m", outputTypeStr]
+
+-- 타입 이름을 대문자로 변환 (int32 -> Int32)
+capitalizeTypeName :: String -> String
+capitalizeTypeName "int32" = "Int32"
+capitalizeTypeName "int64" = "Int64"
+capitalizeTypeName "uint32" = "Word32"
+capitalizeTypeName "uint64" = "Word64"
+capitalizeTypeName "string" = "Text"
+capitalizeTypeName "bool" = "Bool"
+capitalizeTypeName "double" = "Double"
+capitalizeTypeName "float" = "Float"
+capitalizeTypeName name = name -- 사용자 정의 타입은 그대로
 
 -- 2. 유틸리티 함수들
 

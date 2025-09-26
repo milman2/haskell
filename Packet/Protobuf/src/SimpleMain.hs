@@ -11,6 +11,8 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import System.Environment (getArgs)
 import System.Exit (exitWith, ExitCode(ExitFailure))
+import System.FilePath (takeFileName, takeDirectory)
+import System.Directory (createDirectoryIfMissing)
 import Options.Applicative (Parser, ParserInfo, argument, option, str, metavar, help, long, short, optional, switch, info, fullDesc, progDesc, header, helper, execParser, (<**>))
 
 -- 1. CLI 옵션 정의
@@ -18,6 +20,7 @@ import Options.Applicative (Parser, ParserInfo, argument, option, str, metavar, 
 data ProtobufOptions = ProtobufOptions
     { inputFile :: FilePath
     , outputFile :: Maybe FilePath
+    , outputDir :: Maybe FilePath
     , verbose :: Bool
     } deriving (Show)
 
@@ -27,6 +30,7 @@ protobufOptions :: Parser ProtobufOptions
 protobufOptions = ProtobufOptions
     <$> argument str (metavar "INPUT" <> help "Input .proto file")
     <*> optional (option str (long "output" <> short 'o' <> metavar "FILE" <> help "Output Haskell file"))
+    <*> optional (option str (long "output-dir" <> short 'd' <> metavar "DIR" <> help "Output directory (default: generated/)"))
     <*> switch (long "verbose" <> short 'v' <> help "Verbose output")
 
 -- CLI 정보
@@ -84,10 +88,16 @@ processProtobufFile options = do
             -- 출력 파일 결정
             let outputPath = case outputFile options of
                     Just path -> path
-                    Nothing -> 
+                    Nothing ->
                         let inputPath = inputFile options
-                            baseName = takeWhile (/= '.') inputPath
-                        in baseName ++ ".hs"
+                            baseName = takeWhile (/= '.') (takeFileName inputPath)
+                            dir = case outputDir options of
+                                Just d -> d
+                                Nothing -> "generated"
+                        in dir ++ "/" ++ baseName ++ ".hs"
+            
+            -- 출력 디렉토리 생성
+            createDirectoryIfMissing True (takeDirectory outputPath)
             
             -- 파일 쓰기
             writeFile outputPath haskellCode
