@@ -30,5 +30,10 @@ table Weapon {
   damage:short;
 }
 
+table Armor {
+  name:string;
+  defense:short;
+}
+
 // Root type
 root_type Monster;

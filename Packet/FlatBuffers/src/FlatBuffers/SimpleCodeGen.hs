@@ -130,11 +130,23 @@ generateCppCode _ fbsFile =
         namespace = case fileNamespace fbsFile of
             Just ns -> generateCppNamespace (unpack ns)
             Nothing -> []
-        definitions = concatMap generateCppDefinitionCode (fileDefinitions fbsFile)
+        -- 타입 선언 순서: enum 먼저, 그 다음 struct/table, 마지막에 union
+        enums = concatMap generateCppDefinitionCode (filter isEnum (fileDefinitions fbsFile))
+        structs = concatMap generateCppDefinitionCode (filter isStructOrTable (fileDefinitions fbsFile))
+        unions = concatMap generateCppDefinitionCode (filter isUnion (fileDefinitions fbsFile))
+        definitions = enums ++ structs ++ unions
         namespaceEnd = case fileNamespace fbsFile of
             Just _ -> ["", "} // namespace"]
             Nothing -> []
     in unlines (includes ++ namespace ++ definitions ++ namespaceEnd)
+  where
+    isEnum (FileEnum _) = True
+    isEnum _ = False
+    isStructOrTable (FileStruct _) = True
+    isStructOrTable (FileTable _) = True
+    isStructOrTable _ = False
+    isUnion (FileUnion _) = True
+    isUnion _ = False
 
 -- C++ 인클루드 생성
 generateCppIncludes :: [String]
