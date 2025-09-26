@@ -42,7 +42,6 @@ generateMessageCode msg =
         indentedFields = map ("  " ++) fieldStrings
         nestedTypeCodes = concatMap (++ [""]) (map generateNestedTypeCode nestedTypes)
     in nestedTypeCodes ++
-       [""] ++  -- 빈 줄 추가
        [unwords ["data", typeName, "=", typeName, "{"]] ++
         indentedFields ++
         ["} deriving (Show, Eq, Generic)"]
@@ -96,8 +95,7 @@ generateEnumCode enum =
     in [unwords ["data", typeName, "="] ++
         " " ++ intercalate " | " valueStrings ++
         " deriving (Show, Eq, Generic)"
-        ] ++
-        [""]  -- 빈 줄 추가
+        ]
 
 -- 서비스 코드 생성
 generateServiceCode :: Service -> [String]
