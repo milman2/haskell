@@ -1,0 +1,18 @@
+cabal-version:   3.0
+name:            Compiler
+version:         0.1.0.0
+license:         NONE
+build-type:      Simple
+extra-doc-files: CHANGELOG.md
+
+common warnings
+    ghc-options: -Wall
+
+executable Compiler
+    import:           warnings
+    main-is:          Main.hs
+    build-depends:    base ^>=4.20.1.0,
+                     parsec ^>=3.1.18.0,
+                     containers ^>=0.6.7
+    hs-source-dirs:   app
+    default-language: Haskell2010
