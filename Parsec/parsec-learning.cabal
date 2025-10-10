@@ -6,11 +6,11 @@ cabal-version: 2.2
 
 name:           parsec-learning
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/milman/parsec-learning#readme>
-homepage:       https://github.com/milman/parsec-learning#readme
-bug-reports:    https://github.com/milman/parsec-learning/issues
-author:         Milman
-maintainer:     milman@example.com
+description:    Please see the README on GitHub at <https://github.com/milman2/parsec-learning#readme>
+homepage:       https://github.com/milman2/parsec-learning#readme
+bug-reports:    https://github.com/milman2/parsec-learning/issues
+author:         milman2
+maintainer:     milman2@voyagergames.gg
 copyright:      2024
 license:        BSD-3-Clause
 license-file:   LICENSE
@@ -21,7 +21,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/milman/parsec-learning
+  location: https://github.com/milman2/parsec-learning
 
 library
   exposed-modules:
