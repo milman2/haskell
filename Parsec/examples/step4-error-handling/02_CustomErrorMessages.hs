@@ -16,119 +16,119 @@ basicParser = do
 -- 사용자 정의 에러 메시지
 customErrorParser :: Parser String
 customErrorParser = do
-  string "hello" <?> "expected 'hello'"
+  try (string "hello") <?> "keyword 'hello'"
   return "matched"
 
 -- 여러 에러 메시지
 multipleErrorParser :: Parser String
 multipleErrorParser = do
-  choice [string "hello" <?> "expected 'hello'",
-          string "hi" <?> "expected 'hi'",
-          string "hey" <?> "expected 'hey'"]
+  choice [ try (string "hello") <?> "keyword 'hello'",
+           try (string "hi")    <?> "keyword 'hi'",
+           try (string "hey")   <?> "keyword 'hey'" ]
   return "matched"
 
 -- 중첩된 에러 메시지
 nestedErrorParser :: Parser String
 nestedErrorParser = do
-  char '(' <?> "expected opening parenthesis"
-  content <- many (noneOf "()") <?> "expected content"
-  char ')' <?> "expected closing parenthesis"
+  try (char '(') <?> "opening parenthesis '('"
+  content <- many (noneOf "()") <?> "content"
+  try (char ')') <?> "closing parenthesis ')'"
   return content
 
 -- 복잡한 에러 메시지
 complexErrorParser :: Parser (String, Int)
 complexErrorParser = do
-  var <- many1 letter <?> "expected variable name"
+  var <- try (many1 letter) <?> "variable name"
   spaces
-  char '=' <?> "expected '='"
+  try (char '=') <?> "'='"
   spaces
-  value <- many1 digit <?> "expected number"
+  value <- try (many1 digit) <?> "number"
   return (var, read value)
 
 -- JSON 스타일 에러 메시지
 jsonErrorParser :: Parser (String, String)
 jsonErrorParser = do
-  char '"' <?> "expected opening quote"
-  key <- many (noneOf "\"") <?> "expected key"
-  char '"' <?> "expected closing quote"
+  try (char '"') <?> "opening quote"
+  key <- many (noneOf "\"") <?> "key"
+  try (char '"') <?> "closing quote"
   spaces
-  char ':' <?> "expected ':'"
+  try (char ':') <?> "colon"
   spaces
-  char '"' <?> "expected opening quote"
-  value <- many (noneOf "\"") <?> "expected value"
-  char '"' <?> "expected closing quote"
+  try (char '"') <?> "opening quote"
+  value <- many (noneOf "\"") <?> "value"
+  try (char '"') <?> "closing quote"
   return (key, value)
 
 -- 함수 호출 에러 메시지
 functionCallErrorParser :: Parser (String, [String])
 functionCallErrorParser = do
-  funcName <- many1 letter <?> "expected function name"
-  char '(' <?> "expected opening parenthesis"
+  funcName <- try (many1 letter) <?> "function name"
+  try (char '(') <?> "opening parenthesis"
   spaces
-  args <- sepBy (many1 letter <?> "expected argument") (char ',' <?> "expected comma")
+  args <- sepBy (many1 letter <?> "argument") (try (char ',') <?> "comma ','")
   spaces
-  char ')' <?> "expected closing parenthesis"
+  try (char ')') <?> "closing parenthesis"
   return (funcName, args)
 
 -- 배열 접근 에러 메시지
 arrayAccessErrorParser :: Parser (String, Int)
 arrayAccessErrorParser = do
-  arrayName <- many1 letter <?> "expected array name"
-  char '[' <?> "expected opening bracket"
+  arrayName <- try (many1 letter) <?> "array name"
+  try (char '[') <?> "opening bracket '['"
   spaces
-  index <- many1 digit <?> "expected array index"
+  index <- try (many1 digit) <?> "array index"
   spaces
-  char ']' <?> "expected closing bracket"
+  try (char ']') <?> "closing bracket ']'"
   return (arrayName, read index)
 
 -- 조건문 에러 메시지
 ifStatementErrorParser :: Parser (String, String)
 ifStatementErrorParser = do
-  string "if" <?> "expected 'if'"
+  try (string "if") <?> "keyword 'if'"
   spaces
-  condition <- many1 letter <?> "expected condition"
+  condition <- try (many1 letter) <?> "condition"
   spaces
-  char '{' <?> "expected opening brace"
+  try (char '{') <?> "opening brace '{'"
   spaces
-  body <- many (noneOf "}") <?> "expected statement body"
+  body <- many (noneOf "}") <?> "statement body"
   spaces
-  char '}' <?> "expected closing brace"
+  try (char '}') <?> "closing brace '}'"
   return (condition, body)
 
 -- 반복문 에러 메시지
 whileStatementErrorParser :: Parser (String, String)
 whileStatementErrorParser = do
-  string "while" <?> "expected 'while'"
+  try (string "while") <?> "keyword 'while'"
   spaces
-  condition <- many1 letter <?> "expected condition"
+  condition <- try (many1 letter) <?> "condition"
   spaces
-  char '{' <?> "expected opening brace"
+  try (char '{') <?> "opening brace '{'"
   spaces
-  body <- many (noneOf "}") <?> "expected statement body"
+  body <- many (noneOf "}") <?> "statement body"
   spaces
-  char '}' <?> "expected closing brace"
+  try (char '}') <?> "closing brace '}'"
   return (condition, body)
 
 -- 할당문 에러 메시지
 assignmentErrorParser :: Parser (String, String)
 assignmentErrorParser = do
-  var <- many1 letter <?> "expected variable name"
+  var <- try (many1 letter) <?> "variable name"
   spaces
-  char '=' <?> "expected '='"
+  try (char '=') <?> "'='"
   spaces
-  value <- many1 (letter <|> digit) <?> "expected value"
+  value <- many1 (letter <|> digit) <?> "value"
   return (var, value)
 
 -- 출력문 에러 메시지
 printStatementErrorParser :: Parser String
 printStatementErrorParser = do
-  string "print" <?> "expected 'print'"
+  try (string "print") <?> "keyword 'print'"
   spaces
-  char '(' <?> "expected opening parenthesis"
+  try (char '(') <?> "opening parenthesis"
   spaces
-  value <- many1 (letter <|> digit) <?> "expected value to print"
+  value <- many1 (letter <|> digit) <?> "value to print"
   spaces
-  char ')' <?> "expected closing parenthesis"
+  try (char ')') <?> "closing parenthesis"
   return value
 
 main :: IO ()
