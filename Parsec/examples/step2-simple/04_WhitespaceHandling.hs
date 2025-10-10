@@ -10,6 +10,14 @@ import Text.Parsec.String
 -- spaces: 0개 이상의 공백 문자 (공백, 탭, 개행)
 -- lexeme: 파서 뒤에 공백을 무시
 
+-- lexeme 함수 정의: 파서 뒤에 공백을 무시
+lexeme :: Parser a -> Parser a
+lexeme p = p <* spaces
+
+-- skipSpaces 함수 정의: 공백을 소비하지만 결과는 무시
+skipSpaces :: Parser ()
+skipSpaces = spaces >> return ()
+
 -- 기본 공백 처리
 basicSpaces :: Parser String
 basicSpaces = do
@@ -35,7 +43,7 @@ mixedParsing = do
   first <- lexeme (many1 letter)
   char '='
   spaces
-  second <- many1 letter
+  second <- many1 (letter <|> digit)  -- 숫자도 허용
   return (first, second)
 
 -- skipSpaces: 공백을 소비하지만 결과는 무시

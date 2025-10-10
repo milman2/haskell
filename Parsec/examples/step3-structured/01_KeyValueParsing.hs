@@ -37,10 +37,18 @@ keyValueQuoted = do
   char '"'
   return (key, value)
 
+-- 줄바꿈용 키-값 쌍 (공백 처리 없음)
+keyValueForNewline :: Parser (String, String)
+keyValueForNewline = do
+  key <- many1 (letter <|> digit <|> char '_')
+  char '='
+  value <- many1 (letter <|> digit <|> char '_')
+  return (key, value)
+
 -- 여러 키-값 쌍 (줄바꿈으로 구분)
 keyValueList :: Parser [(String, String)]
 keyValueList = do
-  pairs <- sepBy keyValueWithSpaces (char '\n')
+  pairs <- sepBy keyValueForNewline (char '\n')
   return pairs
 
 -- 여러 키-값 쌍 (쉼표로 구분)

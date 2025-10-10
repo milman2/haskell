@@ -66,10 +66,10 @@ sepEndByList = do
   return strings
 
 -- count: 정확한 개수의 요소
-exactCountList :: Parser [String]
+exactCountList :: Parser [Char]
 exactCountList = do
-  strings <- count 3 (many1 letter)
-  return strings
+  chars <- count 3 letter
+  return chars
 
 -- between: 특정 문자로 감싸진 리스트
 betweenList :: Parser [String]
@@ -108,7 +108,7 @@ main = do
   -- sepBy1 (최소 1개)
   putStrLn "\n6. sepBy1 (최소 1개 요소):"
   parseTest nonEmptyList "[a,b,c]"
-  parseTest nonEmptyList "[]"  -- 실패
+  parseTest nonEmptyList "[a]"  -- 최소 1개 요소
   
   -- endBy
   putStrLn "\n7. endBy (구분자로 끝):"
@@ -122,7 +122,7 @@ main = do
   -- count
   putStrLn "\n9. count (정확한 개수):"
   parseTest exactCountList "abc"
-  parseTest exactCountList "ab"  -- 실패
+  parseTest exactCountList "ab"  -- 실패 (2개만 있음)
   
   -- between
   putStrLn "\n10. between (특정 문자로 감싸기):"
