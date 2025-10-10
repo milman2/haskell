@@ -1,5 +1,6 @@
 ﻿-- [https://www.youtube.com/watch?v=iWpvKDFuCns](Writing a Parser in Haskell - Compiler Tutorial Pt 1)
 -- [https://www.youtube.com/watch?v=2QgIt-Om8ig](Writing a C Code Generator in Haskell - Compiler Tutorial Pt 2)
+
 -- cabal init --simple --minimal --exe
 -- cabal build
 
