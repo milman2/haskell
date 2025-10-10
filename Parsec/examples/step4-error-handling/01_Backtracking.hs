@@ -63,20 +63,20 @@ operatorWithTry op = do
 
 -- try로 식별자 파싱
 identifierWithTry :: Parser String
-identifierWithTry = do
+identifierWithTry = try $ do
   first <- letter
   rest <- many (letter <|> digit <|> char '_')
   return (first : rest)
 
 -- try로 숫자 파싱
 numberWithTry :: Parser Int
-numberWithTry = do
+numberWithTry = try $ do
   digits <- many1 digit
   return (read digits)
 
 -- try로 문자열 파싱
 stringWithTry :: Parser String
-stringWithTry = do
+stringWithTry = try $ do
   char '"'
   content <- many (noneOf "\"")
   char '"'
@@ -84,7 +84,7 @@ stringWithTry = do
 
 -- try로 괄호 파싱
 parenthesesWithTry :: Parser String
-parenthesesWithTry = do
+parenthesesWithTry = try $ do
   char '('
   content <- many (noneOf "()")
   char ')'
