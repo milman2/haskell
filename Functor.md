@@ -1,12 +1,29 @@
 ﻿# Functor
-- **함수를 적용할 수 있는 컨텍스트**를 나타내는 타입 클래스
+- **함수를 적용할 수 있는 컨텍스트**를 나타내는 type class
+
 ## 기본 정의
 ```hs
 class Functor f where
     fmap :: (a -> b) -> f a -> f b 
 ```
 - fmap : Functor의 핵심 함수
+  fmap lets you take a function and apply it to a container of type f.
+  "fmap은 어떤 함수를 받아서, f 타입의 컨테이너 안에 있는 값에 그 함수를 적용할 수 있게 해준다."
+- (a -> b) : 일반적인 함수. 컨테이너 안의 값을 바꾸는 함수.
 - f는 컨텍스트(박스)를 나타내는 타입
+- container of type f : Maybe, List, IO, Either 등 Functor 타입
+```hs
+fmap (+1) (Just 3)
+fmap (*2) [1, 2, 3]
+fmap show (Right 42)
+fmap show (getline)
+```
+
+```hs
+instance Functor Maybe where
+  fmap f (Just x) = Just (f x)
+  fmap _ Nothing = Nothing
+```
 
 ## Functor 법칙
 - 항등 법칙(Identity Law)

@@ -385,10 +385,13 @@ test = display(42);  // OK: int는 Showable concept 만족
 
 **Haskell Type Class**
 ```haskell
--- 인스턴스를 별도로 정의
-instance Show Int where
-    show x = show x
+data Color = Red | Green | Blue
 
+instance Show Color where
+    show Red   = "빨간색"
+    show Green = "초록색" 
+    show Blue  = "파란색"
+    
 instance Show Bool where
     show True = "True"
     show False = "False"
