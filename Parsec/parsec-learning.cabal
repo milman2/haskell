@@ -1,0 +1,73 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.38.1.
+--
+-- see: https://github.com/sol/hpack
+
+name:           parsec-learning
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/milman/parsec-learning#readme>
+homepage:       https://github.com/milman/parsec-learning#readme
+bug-reports:    https://github.com/milman/parsec-learning/issues
+author:         Milman
+maintainer:     milman@example.com
+copyright:      2024
+license:        BSD-3-Clause
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/milman/parsec-learning
+
+library
+  exposed-modules:
+      Lib
+  other-modules:
+      Paths_parsec_learning
+  autogen-modules:
+      Paths_parsec_learning
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      base >=4.7 && <5
+    , containers >=0.6.7
+    , parsec >=3.1.18.0
+  default-language: Haskell2010
+
+executable parsec-learning-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_parsec_learning
+  autogen-modules:
+      Paths_parsec_learning
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , containers >=0.6.7
+    , parsec >=3.1.18.0
+    , parsec-learning
+  default-language: Haskell2010
+
+test-suite parsec-learning-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_parsec_learning
+  autogen-modules:
+      Paths_parsec_learning
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , containers >=0.6.7
+    , parsec >=3.1.18.0
+    , parsec-learning
+  default-language: Haskell2010
