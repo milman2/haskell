@@ -4,11 +4,11 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 
-name:           parsec-learning
+name:           megaparsec-learning
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/milman2/parsec-learning#readme>
-homepage:       https://github.com/milman2/parsec-learning#readme
-bug-reports:    https://github.com/milman2/parsec-learning/issues
+description:    Please see the README on GitHub at <https://github.com/milman2/megaparsec-learning#readme>
+homepage:       https://github.com/milman2/megaparsec-learning#readme
+bug-reports:    https://github.com/milman2/megaparsec-learning/issues
 author:         milman2
 maintainer:     milman2@voyagergames.gg
 copyright:      2025
@@ -21,53 +21,56 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/milman2/parsec-learning
+  location: https://github.com/milman2/megaparsec-learning
 
 library
   exposed-modules:
       Lib
   other-modules:
-      Paths_parsec_learning
+      Paths_megaparsec_learning
   autogen-modules:
-      Paths_parsec_learning
+      Paths_megaparsec_learning
   hs-source-dirs:
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
-    , containers >=0.6.7
-    , parsec >=3.1.18.0
+    , megaparsec >=9.6
+    , parser-combinators >=1.3.0
+    , text >=2.0
   default-language: Haskell2010
 
-executable parsec-learning-exe
+executable megaparsec-learning-exe
   main-is: Main.hs
   other-modules:
-      Paths_parsec_learning
+      Paths_megaparsec_learning
   autogen-modules:
-      Paths_parsec_learning
+      Paths_megaparsec_learning
   hs-source-dirs:
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
-    , containers >=0.6.7
-    , parsec >=3.1.18.0
-    , parsec-learning
+    , megaparsec >=9.6
+    , megaparsec-learning
+    , parser-combinators >=1.3.0
+    , text >=2.0
   default-language: Haskell2010
 
-test-suite parsec-learning-test
+test-suite megaparsec-learning-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_parsec_learning
+      Paths_megaparsec_learning
   autogen-modules:
-      Paths_parsec_learning
+      Paths_megaparsec_learning
   hs-source-dirs:
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
-    , containers >=0.6.7
-    , parsec >=3.1.18.0
-    , parsec-learning
+    , megaparsec >=9.6
+    , megaparsec-learning
+    , parser-combinators >=1.3.0
+    , text >=2.0
   default-language: Haskell2010
