@@ -45,25 +45,30 @@ keyword kw = do
   notFollowedBy (letter <|> digit <|> char '_')
   return result
 
--- 공백이 있는 문자열 파싱
+-- 공백을 무시하는 따옴표 문자열 파싱
 spacedString :: Parser String
 spacedString = do
+  spaces
   char '"'
   content <- many (noneOf "\"")
   char '"'
+  spaces
   return content
 
 -- 이스케이프 문자가 있는 문자열 파싱
 escapedString :: Parser String
 escapedString = do
   char '"'
-  content <- many escapedChar
+  content <- many (escapedChar <|> noneOf "\"")
   char '"'
   return content
   where
     escapedChar = do
       char '\\'
-      char '"' <|> char '\\' <|> char 'n' <|> char 't'
+      choice [char '"' >> return '"',
+              char '\\' >> return '\\',
+              char 'n' >> return '\n',
+              char 't' >> return '\t']
 
 main :: IO ()
 main = do
@@ -100,7 +105,13 @@ main = do
   parseTest (keyword "if") "if"
   parseTest (keyword "if") "ifelse"  -- 실패
   
+  -- 공백을 무시하는 따옴표 문자열
+  putStrLn "\n7. 공백을 무시하는 따옴표 문자열 파싱:"
+  parseTest spacedString "  \"hello world\"  "
+  parseTest spacedString "\"hello world\""
+  parseTest spacedString "   \"\"   "
+  
   -- 이스케이프 문자열
-  putStrLn "\n7. 이스케이프 문자열 파싱:"
+  putStrLn "\n8. 이스케이프 문자열 파싱:"
   parseTest escapedString "\"hello\\nworld\""
   parseTest escapedString "\"quote\\\"here\""
