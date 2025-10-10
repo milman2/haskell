@@ -1,5 +1,6 @@
 ﻿# Zipper
-- 어떤 자료구조를 "현재 위치"와 "나머지 구조"로 나누어 표현하는 기법
+- 어떤 자료구조를 **현재 위치**와 **나머지 구조**로 나누어 표현하는 기법
+- **부분적으로 포커스를 맞추고**, 그 위치에서 **삽입, 삭제, 이동**을 쉽게
 
 # 언제 유용?
 | 상황              | Zipper의 장점                                  |
@@ -11,24 +12,29 @@
 
 # 예시
 ```hs
-data ListZipper a = ListZipper [a] a [a]
--- 왼쪽 리스트, 현재 포커스, 오른쪽 리스트
-
-moveLeft :: ListZipper a -> Maybe (ListZipper a)
-moveLeft (ListZipper (l:ls) x rs) = Just (ListZipper ls l (x:rs))
-moveLeft _ = Nothing
-```
-
-```hs
 import Control.Monad (join)
 
 -- Define the list zipper type
+-- (왼쪽 부분, 오른쪽 부분)
+-- 오른쪽 리스트의 첫 번째 요소가 현재 포커스
+-- 왼쪽 리스트는 포커스를 지나온 값들을 담고 있으며, 역순으로 저장
 type ListZipper a = ([a],[a])
 
 -- Function to view the current focus of the zipper
 focus :: ListZipper a -> Maybe a
 focus (_,[]) = Nothing
 focus (_, x:_) = Just x
+
+insert :: a -> ListZipper a -> ListZipper a
+insert new (left, right) = (left, new : right)
+
+delete :: ListZipper a -> Maybe (ListZipper a)
+delete (left, [])     = Nothing
+delete (left, _:rest) = Just (left, rest)
+
+replace :: a -> ListZipper a -> Maybe (ListZipper a)
+replace _ (left, [])     = Nothing
+replace new (left, _:xs) = Just (left, new : xs)
 
 -- Move the zipper to the right
 goRight :: ListZipper a -> Maybe (ListZipper a)
