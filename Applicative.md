@@ -33,6 +33,13 @@ addMaybe (Just 3) (Just 4)
 -- Just (\x -> 3 + x) <*> Just 4 → Just (3 + 4) → Just 7
 ```
 
+```hs
+f1 x y = 2 * x + y
+-- <$> : fmap의 infix notation
+show $ f1 <$> (Just 1) <*> (Just 2)
+-- <$>는 fmap의 중위 버전 → f1 <$> Just 1은 Just (f1 1) → Just (\y -> 2 * 1 + y) → Just (\y -> 2 + y)
+-- <*>는 Applicative 연산자 → Just (f1 1) <*> Just 2는 Just (f1 1 2) → Just 4
+```
 ## 응용 분야
 ### 옵션/설정 값 처리 (Maybe, Either)
 - 사용자 입력 폼에서 모든 필드가 유효할 때만 결과 생성
