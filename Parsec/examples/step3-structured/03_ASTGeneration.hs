@@ -9,6 +9,7 @@ import Text.Parsec.String
 
 -- 간단한 수식 AST
 data Expr = Number Int
+          | Var String
           | Add Expr Expr
           | Sub Expr Expr
           | Mul Expr Expr
@@ -26,7 +27,7 @@ expr = do
 term :: Parser Expr
 term = do
   left <- factor
-  rest <- many (addOp <|> subOp)
+  rest <- many (try addOp <|> try subOp)
   return (foldl (\acc (op, right) -> op acc right) left rest)
   where
     addOp = do
@@ -45,7 +46,7 @@ term = do
 factor :: Parser Expr
 factor = do
   left <- primary
-  rest <- many (mulOp <|> divOp)
+  rest <- many (try mulOp <|> try divOp)
   return (foldl (\acc (op, right) -> op acc right) left rest)
   where
     mulOp = do
@@ -64,11 +65,14 @@ factor = do
 primary :: Parser Expr
 primary = do
   spaces
-  choice [number, parentheses]
+  choice [number, variable, parentheses]
   where
     number = do
       digits <- many1 digit
       return (Number (read digits))
+    variable = do
+      name <- many1 letter
+      return (Var name)
     parentheses = do
       char '('
       result <- expr
@@ -86,7 +90,7 @@ data Statement = Assign String Expr
 statement :: Parser Statement
 statement = do
   spaces
-  choice [assignStmt, printStmt, ifStmt, whileStmt]
+  choice [try printStmt, try ifStmt, try whileStmt, try assignStmt]
 
 assignStmt :: Parser Statement
 assignStmt = do
@@ -202,6 +206,7 @@ jsonPair = do
 -- AST 평가 함수 (수식)
 eval :: Expr -> Int
 eval (Number n) = n
+eval (Var _) = 0  -- 데모용: 변수 값은 0으로 처리
 eval (Add left right) = eval left + eval right
 eval (Sub left right) = eval left - eval right
 eval (Mul left right) = eval left * eval right
