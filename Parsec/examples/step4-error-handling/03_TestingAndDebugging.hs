@@ -1,9 +1,10 @@
-{-# LANGUAGE OverloadedStrings #-}
+-- (OverloadedStrings 제거: parseTest 문자열 모호성 해소)
 module Step4.TestingAndDebugging where
 
 import Text.Parsec
 import Text.Parsec.String
 import System.IO
+import System.Directory (removeFile)
 
 -- 4️⃣ 에러 처리와 디버깅
 -- parseTest, parseFromFile로 테스트
