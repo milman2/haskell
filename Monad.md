@@ -2,7 +2,32 @@
 
 ## 모나드(Monad)란?
 
-모나드는 **순차적인 계산을 체계적으로 처리**할 수 있게 해주는 타입 클래스입니다. 부작용(side effects)이 있는 계산을 안전하게 다루는 데 사용됩니다.
+- 모나드는 **순차적인 계산을 체계적으로 처리**할 수 있게 해주는 타입 클래스입니다. 부작용(side effects)이 있는 계산을 안전하게 다루는 데 사용됩니다.
+- **계산을 연결하는 방식**을 정의하는 추상화
+
+## 모나드 법칙 (Monad Laws)
+
+### 1. **Left Identity**
+```haskell
+return x >>= f ≡ f x
+```
+
+### 2. **Right Identity**
+```haskell
+m >>= return ≡ m
+```
+
+### 3. **Associativity**
+```haskell
+(m >>= f) >>= g ≡ m >>= (\x -> f x >>= g)
+```
+
+```hs
+let f x = Just (x + 1)
+let g x = Just (x * 10)
+(Just 1 >>= f) >>= g -- Just 20
+Just 1 >>= (\x -> f x >>= g) -- Just 20
+```
 
 ## 모나드의 기본 개념
 
@@ -11,10 +36,23 @@
 ```haskell
 class Monad m where
     (>>=) :: m a -> (a -> m b) -> m b  -- bind 연산자
-    return :: a -> m a                 -- 값을 모나드로 감싸기
-    (>>) :: m a -> m b -> m b          -- 순차 실행
+    return :: a -> m a                 -- 값을 모나드로 감싸기. (이제는 `pure`로 대체됨)
+    (>>) :: m a -> m b -> m b          -- then 순차 실행
     fail :: String -> m a              -- 실패 처리
 ```
+
+### 예시
+```hs
+safeDivide :: Int -> Int -> Maybe Int
+safeDivide _ 0 = Nothing
+safeDivide x y = Just (x `div` y)
+
+calc :: Maybe Int
+calc = Just 10 >>= \x ->
+       Just 2  >>= \y ->
+       safeDivide x y
+```
+
 
 ### 2. **핵심 연산자들**
 
@@ -189,7 +227,7 @@ test = runState incrementTwice 0  -- (2, 2)
 ```
 
 ## do 표기법 (do Notation)
-
+- **명령형 스타일**로 표현 가능
 ### 1. **기본 사용법**
 
 ```haskell
@@ -228,22 +266,7 @@ interactiveProgram = do
     putStrLn $ "Sum: " ++ show (num1 + num2)
 ```
 
-## 모나드 법칙 (Monad Laws)
 
-### 1. **Left Identity**
-```haskell
-return x >>= f ≡ f x
-```
-
-### 2. **Right Identity**
-```haskell
-m >>= return ≡ m
-```
-
-### 3. **Associativity**
-```haskell
-(m >>= f) >>= g ≡ m >>= (\x -> f x >>= g)
-```
 
 ## 모나드 유틸리티 함수들
 
