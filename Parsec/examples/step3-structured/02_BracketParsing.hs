@@ -15,13 +15,13 @@ parentheses = do
   char ')'
   return content
 
--- 중첩된 괄호 (간단한 버전)
+-- 중첩된 괄호 (제대로 구현)
 nestedParentheses :: Parser String
 nestedParentheses = do
   char '('
-  content <- many (noneOf "()" <|> nestedParentheses)
+  parts <- many (nestedParentheses <|> fmap (:[]) (noneOf "()"))
   char ')'
-  return ("(" ++ content ++ ")")
+  return ("(" ++ concat parts ++ ")")
 
 -- 중괄호
 braces :: Parser String
@@ -87,21 +87,20 @@ nestedBracketExpr = do
   char ')'
   return (BracketExpr content inner)
 
--- 괄호 밸런스 체크
 balancedParentheses :: Parser String
-balancedParentheses = do
-  result <- many balancedChar
-  return result
+balancedParentheses = fmap concat (many (parenGroup <|> normalChar))
   where
-    balancedChar = do
-      c <- anyChar
-      case c of
-        '(' -> do
-          inner <- balancedParentheses
-          char ')'
-          return ('(' : inner ++ ")")
-        ')' -> fail "unexpected closing parenthesis"
-        _ -> return [c]
+    -- 일반 문자 하나를 문자열로 승격
+    normalChar :: Parser String
+    normalChar = (:[]) <$> noneOf "()"
+
+    -- 괄호 그룹: '(' balanced ')' 형태를 재귀적으로 허용
+    parenGroup :: Parser String
+    parenGroup = do
+      char '('
+      inside <- balancedParentheses
+      char ')'
+      return ('(' : inside ++ ")")
 
 -- 함수 호출 스타일
 functionCall :: Parser (String, [String])
@@ -160,12 +159,14 @@ main = do
   
   -- 중첩된 괄호
   putStrLn "\n7. 중첩된 괄호:"
-  parseTest nestedBracketExpr "(hello(world)test)"
-  parseTest nestedBracketExpr "((nested))"
+  parseTest nestedParentheses "(hello)"
+  parseTest nestedParentheses "((nested))"
+  parseTest nestedParentheses "(((deep)))"
+  parseTest nestedParentheses "(a(b)c)"
   
   -- 괄호 밸런스 체크
   putStrLn "\n8. 괄호 밸런스 체크:"
-  parseTest balancedParentheses "((hello))"
+  parseTest balancedParentheses "((hello)world)"
   parseTest balancedParentheses "((hello)"  -- 실패
   
   -- 함수 호출
