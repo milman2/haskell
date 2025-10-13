@@ -34,9 +34,10 @@ Just 1 >>= (\x -> f x >>= g) -- Just 20
 ### 1. **모나드 타입 클래스 정의**
 
 ```haskell
-class Monad m where
+class (Applicative m) => Monad m where
     (>>=) :: m a -> (a -> m b) -> m b  -- bind 연산자
     return :: a -> m a                 -- 값을 모나드로 감싸기. (이제는 `pure`로 대체됨)
+    return = pure
     (>>) :: m a -> m b -> m b          -- then 순차 실행
     fail :: String -> m a              -- 실패 처리
 ```
