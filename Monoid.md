@@ -1,9 +1,10 @@
 ﻿# Monoid
 - **데이터를 결합하고 초기값을 정의하는 방식**을 표현
 ```hs
-class Semigroup a => Monoid a where
-  mempty  :: a -- 등원 (결합에 영향을 주지 않는 기본값)
-  mappend :: a -> a -> a  -- 결합 연산 (요즘은 `(<>)`로 대체됨)
+class Semigroup m => Monoid m where
+  mempty  :: m -- 항등원 (결합에 영향을 주지 않는 기본값). unit = identity element
+  mappend :: m -> m -> m  -- 결합 연산 (요즘은 `(<>)`로 대체됨)
+  mappend = (<>)
 ```
 
 ## 예시로 이해하기
