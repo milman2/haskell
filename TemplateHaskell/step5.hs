@@ -17,5 +17,18 @@ data Color = Red | Green | Blue
 
 $(deriveShow ''Color)
 
+data Animal = Cat | Dog | Bird
+
+$(deriveShowSmart ''Animal)
+
 main :: IO ()
-main = print Red
+main = do
+  putStrLn "=== deriveShow (모두 'Color'로 출력) ==="
+  print Red
+  print Green
+  print Blue
+  
+  putStrLn "\n=== deriveShowSmart (각 생성자 이름 출력) ==="
+  print Cat
+  print Dog
+  print Bird
