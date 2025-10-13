@@ -1,7 +1,11 @@
-﻿{-# LANGUAGE FlexibleInstances #-}
+﻿{-# LANGUAGE FlexibleInstances, OverloadedStrings, ApplicativeDo #-}
 
 module Main where
-import Foreign (withArray)
+--import Foreign (withArray)
+
+import Data.Attoparsec.Text hiding (take)
+import Control.Applicative
+import qualified Data.Text as T
 
 type Ident = String
 
@@ -31,7 +35,6 @@ instance Applicative (State m) where
                                    let (x', m'') = x m' in (f' x', m'')
 
 instance Monad (State m) where
-    return = pure
     (St xm) >>= f = St $ \m -> let (x, m') = xm m in
                                let (St g) = f x in
                                g m'
@@ -62,14 +65,91 @@ data Expr = Number Int
     | Assign Expr Expr
     deriving (Show, Eq)
 
-
--- 
 data Value = NumVal Int | BoolVal Bool | Closure [Ident] Expr Env | Null | MemAddr Int
     deriving (Show, Eq)
 
 data Defn = Val Ident Expr
     | Rec Ident Expr
     deriving (Show, Eq)
+
+parseFun t = parseOnly (skipSpace *> parseExpr <* skipSpace <* endOfInput) t
+
+parseExpr :: Parser Expr
+parseExpr = parsePM <|> parseExpr'
+
+parseExpr' :: Parser Expr
+parseExpr' = parseConst
+        <|> parseIf
+        <|> parseLet
+        <|> parseLam
+        <|> parseApp
+        <|> parseVar
+
+ss = skipSpace
+
+atom = T.unpack <$> takeWhile1 (\c -> c /= ' ' && c /= '"' && c /= '-' && c /= '(' && c /= ')' && c /= '{' && c /= '}' && c /= '%' && c /= ':' && c /= '!')
+
+parseConst :: Parser Expr
+parseConst = Number <$>decimal 
+        <|> string "True" *> pure (Boolean True)
+        <|> string "False" *> pure (Boolean False)
+
+parseIf :: Parser Expr
+parseIf = do
+    "if" *> ss    
+    condition <- parseExpr <* ss
+    "then" *> ss
+    e1 <- parseExpr <* ss
+    "else" *> ss
+    e2 <- parseExpr <* ss
+    return (If condition e1 e2)
+    
+parseVar = Var <$> atom
+
+parseLet = do
+    "let" *> ss
+    d <- parseDefn <* ss
+    "in" *> ss
+    e <- parseExpr <* ss
+    return (Let d e)
+
+parseDefn =  Val <$> ("val" *> ss *> atom <* ss <* char '=' <* ss) <*> parseExpr
+         <|> Rec <$> ("rec" *> ss *> atom <* ss <* char '=' <* ss) <*> parseExpr
+
+parseLam = do
+    char '!' -- \\ 대신 ! 사용.
+    atoms <- many (atom <* ss)
+    "->" *> ss
+    expr <- parseExpr <* ss
+    return $ Lam atoms expr
+
+parsePM = parsePM' <|> parseTerm
+
+parsePM' = do
+    t <- parseTerm <* ss
+    cons <- (char '+' *> pure Plus) <|> (char '-' *> pure Minus)
+    ss
+    e <- parseExpr
+    return $ cons t e
+
+parseTerm = parseTerm' <|> parseFactor
+parseTerm' = do
+    f <- parseFactor <* ss
+    "==" *> ss
+    t <- parseTerm
+    return $ Equals f t
+
+parseFactor = char '(' *> parseExpr <* char ')' 
+           <|> parseExpr'
+
+parseApp = do
+    string "%{" *> ss
+    f <- parseExpr <* ss
+    char ':' *> ss
+    ins <- many (parseExpr <* ss) 
+    char '}'
+    return $ Apply f ins
+
 
 type Env = [(Ident, Value)]
 
@@ -127,13 +207,20 @@ elab env (Rec i l@(Lam ids e)) = return env'
     where env' = (i, Closure ids e env'):env
 elab _ _ = error "Only lambdas can be recursive"
 
+-- cabal install --lib attoparsec text
+-- runghc ParserForInterpreter.hs
+-- rlwrap ./tutorial8
+-- let rec fib = !in -> if n == 0 then 0 else if n == 1 then 1 else %{fib:n-1} + %{fib:n-2} in %{fib:1}
+-- let rec fib = !in -> if n == 0 then 0 else if n == 1 then 1 else %{fib:n-1} + %{fib:n-2} in %{fib:2}
+-- let rec fib = !in -> if n == 0 then 0 else if n == 1 then 1 else %{fib:n-1} + %{fib:n-2} in %{fib:3}
+-- let rec fib = !in -> if n == 0 then 0 else if n == 1 then 1 else %{fib:n-1} + %{fib:n-2} in %{fib:4}
 main :: IO ()
 main = do
-    let expr1 = Let (Val "foo" (Number 42)) (Var "foo")
-    let res = eval expr1 []
-    print (runState res [])
-
-    let expr2 = Let ((Val "x") New) (Seq (Assign (Var "x") (Number 42)) (Assign (Var "x") (Plus (Deref (Var "x")) (Number 1))))
-    let res2 = eval expr2 []
-    print (runState res2 [])
+    input <- getLine
+    let result = parseFun (T.pack input)
+    case result of
+        Left err -> putStrLn $ "Parse error: " ++ err
+        Right expr -> do
+            putStrLn $ "Parsed: " ++ show expr
+            print $ runState (eval expr []) []
 

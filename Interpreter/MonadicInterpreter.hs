@@ -1,4 +1,4 @@
-﻿{- LANGUAGE FlexibleInstances -}
+﻿{-# LANGUAGE FlexibleInstances #-}
 
 module Main where
 import Foreign (withArray)
